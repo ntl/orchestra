@@ -13,3 +13,4 @@
 *.a
 mkmf.log
 /vendor
+.ruby-version

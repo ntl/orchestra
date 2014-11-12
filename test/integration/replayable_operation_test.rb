@@ -1,33 +1,37 @@
 class ReplayableOperationTest < Minitest::Test
-  def test_performance
-    stub_followers_request []
-    db = build_example_database
+  include Flutter.test_setup
 
-    conductor = Orchestra::Conductor.new(
-      http_interface: Net::HTTP,
-      db_interface: db,
-    )
+  def test_replaying_an_operation
+    service_recording = perform
 
-    result = conductor.perform(
+    assert_equal ["captain_sheridan@babylon5.earth.gov"], service_recording[:output]
+
+    second_result = Orchestra.replay_recording(
       Flutter,
-      inputs: {
-        account_name: 'realntl'
-      },
+      service_recording,
     )
 
-    assert_equal ["captain_sheridan@babylon5.earth.gov"], result
+    assert_equal ["captain_sheridan@babylon5.earth.gov"], second_result
   end
 
   private
 
-  def build_example_database
-    db = SQLite3::Database.new ':memory:'
-    Flutter.populate_database db
-    db
-  end
+  def perform
+    db = build_example_database
+    stub_followers_request
 
-  def stub_followers_request response_hsh
-    followers_stub = stub_request :get, "flutter.io/users/realntl/followers"
-    followers_stub.to_return :body => response_hsh.to_json
+    conductor = Orchestra::Conductor.new(
+      :http => Net::HTTP,
+      :db   => db,
+    )
+
+    recording = conductor.perform_with_recording(
+      Flutter,
+      :account_name => 'realntl',
+    )
+
+    db.close
+
+    recording.to_h
   end
 end

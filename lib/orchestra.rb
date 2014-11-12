@@ -1,130 +1,50 @@
+require "forwardable"
+require "invokr"
+require "observer"
+require "securerandom"
+
 require_relative "orchestra/version"
 
 module Orchestra
   extend self
 
+  autoload :Conductor, "orchestra/conductor"
+  autoload :Configuration, "orchestra/configuration"
+  autoload :Node, "orchestra/node"
+  autoload :Operation, "orchestra/operation"
+  autoload :Performance, "orchestra/performance"
+  autoload :Recording, "orchestra/recording"
+  autoload :RunList, "orchestra/run_list"
+  autoload :ThreadPool, "orchestra/thread_pool"
+  autoload :Util, "orchestra/util"
+
+  module DSL
+    autoload :Nodes, "orchestra/dsl/nodes"
+    autoload :ObjectAdapter, "orchestra/dsl/object_adapter"
+    autoload :Operations, "orchestra/dsl/operations"
+  end
+
+  def configure &block
+    Configuration.module_eval &block
+  end
+
   def define_operation &block
-    builder = Operation::Builder.new
-    Operation::DSL.evaluate builder, &block
+    builder = DSL::Operations::Builder.new
+    DSL::Operations::Context.evaluate builder, &block
     builder.build_operation
   end
 
-  class Conductor
-    def initialize services = {}
-      @registry = {}
-      register_services services
-    end
-
-    def perform operation, params = {}
-    end
-
-    def register service, &block
-      @registry[service] = block
-    end
-
-    def register_services services
-      services.each do |service, val|
-        register Util.to_lazy_thunk val
-      end
-    end
+  def perform operation, inputs = {}
+    Conductor.new.perform operation, inputs
   end
 
-  module Util
-    extend self
-
-    def extract_hash ary
-      if ary.last.is_a? Hash
-        hsh = ary.pop
-      else
-        hsh = {}
-      end
-      [hsh, ary]
-    end
-
-    def to_lazy_thunk obj
-      if obj.respond_to? :to_proc
-        obj
-      else
-        lambda { obj }
-      end
-    end
+  def replay_recording operation, store
+    Recording.replay(
+      operation,
+      store[:input] || store['input'],
+      store[:service_recordings] || store['service_recordings'],
+    )
   end
 
-  class Operation
-    def perform *;
-    end
-
-    class Builder
-      def build_operation
-        Operation.new
-      end
-    end
-
-    class DSL < BasicObject
-      def self.evaluate builder, &block
-        context = new builder
-        context.instance_eval &block
-      end
-
-      attr_accessor :result
-
-      attr :nodes
-
-      def initialize builder
-        @builder = builder
-        @nodes = {}
-      end
-
-      def node name, &block
-        builder = Node::Builder.new
-        @nodes[name] = Node::DSL.evaluate builder, &block
-        builder.build_node
-      end
-    end
-  end
-
-  class Node
-    class Builder
-      def build_node
-        Node.new
-      end
-    end
-
-    class DSL < BasicObject
-      def self.evaluate builder, &block
-        context = new builder
-        context.instance_eval &block
-      end
-
-      attr :collection, :dependencies, :perform_block, :provisions, :perform
-
-      def initialize builder
-        @builder = builder
-        @dependencies = []
-        @provisions = []
-      end
-
-      def depends_on *dependencies
-        defaults, dependencies = Util.extract_hash dependencies
-        @dependencies.concat dependencies
-        defaults.each do |key, default|
-          dependencies << key
-          defaults[key] = Util.to_lazy_thunk default
-        end
-      end
-
-      def provides *provisions
-        @provisions.concat provisions
-      end
-
-      def perform &block
-        @perform_block = block
-      end
-
-      def iterates_over dependency
-        @dependencies << dependency
-        @collection = dependency
-      end
-    end
-  end
+  load File.expand_path('../orchestra/errors.rb', __FILE__)
 end

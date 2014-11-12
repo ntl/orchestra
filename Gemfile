@@ -6,4 +6,6 @@ gemspec
 group :test do
   gem "minitest"
   gem "minitest-red_green"
+  gem "sqlite3"
+  gem "webmock"
 end
