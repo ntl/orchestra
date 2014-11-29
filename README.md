@@ -56,6 +56,35 @@ end
 Orchestra.perform operation, :up_to => 31
 ```
 
+There is an easy way to take this gem for a test drive. Clone the repo, and at the project root:
+
+```sh
+bin/rake console
+```
+
+You can run the gem's tests from within the console with `rake`:
+
+```sh
+[1] pry(Orchestra)> rake
+Run options: --seed 59938
+
+# Running:
+
+................................................
+
+Finished in 0.379958s, 126.3298 runs/s, 1526.4845 assertions/s.
+
+48 runs, 580 assertions, 0 failures, 0 errors, 0 skips
+=> true
+```
+
+Also, you can access the examples:
+
+```ruby
+[1] pry(Orchestra)> Orchestra.perform FizzBuzz, :up_to => 31
+[1] pry(Orchestra)> Orchestra.perform InvitationService, :account_name => 'realntl`
+```
+
 ## Why?
 
 Suppose your application, MyApp, allows users to email an invitation to share the app with all the users' followers on a popular social microblogging network. However, the application also maintains an internal database of known blacklist users who never wish to be emailed. In addition, the application uses a simple heuristic algorithm to filter out bots. From the users' perspective, this is all one feature, but it would be difficult to pack into a single class. A straightforward implementation might look something like this:
