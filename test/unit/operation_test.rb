@@ -89,7 +89,7 @@ class OperationTest < Minitest::Test
     end
 
     error = assert_raises Orchestra::MissingInputError do
-      Orchestra.perform operation
+      Orchestra.perform operation, :bar => nil
     end
 
     assert_equal "Missing inputs :bar and :qux", error.message

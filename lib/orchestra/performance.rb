@@ -37,7 +37,7 @@ module Orchestra
     end
 
     def ensure_inputs_are_present!
-      has_dep = state.method :has_key?
+      has_dep = state.method :[]
       missing_input = required_dependencies.reject &has_dep
       raise MissingInputError.new missing_input unless missing_input.empty?
     end
