@@ -38,12 +38,10 @@ module Orchestra
     Conductor.new.perform operation, inputs
   end
 
-  def replay_recording operation, store
-    Recording.replay(
-      operation,
-      store[:input] || store['input'],
-      store[:service_recordings] || store['service_recordings'],
-    )
+  def replay_recording operation, store, input = {}
+    input = input.merge store[:input] || store['input']
+    svc_recordings = store[:service_recordings] || store['service_recordings']
+    Recording.replay operation, input, svc_recordings
   end
 
   load File.expand_path('../orchestra/errors.rb', __FILE__)

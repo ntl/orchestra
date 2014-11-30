@@ -1,27 +1,11 @@
 class RecordingTelemetryTest < Minitest::Test
-  include Flutter.test_setup
-
-  def setup
-    stub_followers_request
-  end
-
   def test_recording_telemetry
+    output = StringIO.new
     telemetry = {}
 
-    perform_with_telemetry telemetry
+    perform_with_telemetry telemetry, output
 
     assert_equal_telemetry expected_telemetry, telemetry
-  end
-
-  def test_recording_exceptions
-    telemetry = {}
-
-    error = assert_raises ArgumentError do
-      perform_with_telemetry telemetry, build_example_database.dup
-    end
-
-    assert_equal "Flutter", telemetry[:performance_name]
-    assert_equal "prepare called on a closed database", telemetry[:error].message
   end
 
   private
@@ -32,67 +16,72 @@ class RecordingTelemetryTest < Minitest::Test
     end
   end
 
-  def perform_with_telemetry telemetry, db = build_example_database
-    conductor = Orchestra::Conductor.new(
-      :http => Net::HTTP,
-      :db   => db,
-    )
+  def expected_telemetry
+    {
+      :input => { :up_to => 16 },
+      :movements => {
+        :make_array => {
+          :input  => { :up_to => 16 },
+          :output => { :array => [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15] },
+        },
+        :apply_fizzbuzz => {
+          :input  => { :array => [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15] },
+          :output => {
+            :fizzbuzz => [
+              "1",
+              "2",
+              "Fizz",
+              "4",
+              "Buzz",
+              "Fizz",
+              "7",
+              "8",
+              "Fizz",
+              "Buzz",
+              "11",
+              "Fizz",
+              "13",
+              "14",
+              "FizzBuzz",
+            ],
+          },
+        },
+        :print => {
+          :input => {
+            :fizzbuzz => [
+              "1",
+              "2",
+              "Fizz",
+              "4",
+              "Buzz",
+              "Fizz",
+              "7",
+              "8",
+              "Fizz",
+              "Buzz",
+              "11",
+              "Fizz",
+              "13",
+              "14",
+              "FizzBuzz",
+            ],
+          },
+          :output => { :print => [] },
+        }
+      },
+      :output => nil,
+    }
+  end
+
+  def perform_with_telemetry telemetry, io
+    conductor = Orchestra::Conductor.new :io => io
 
     conductor.add_observer TelemetryRecorder.new telemetry
 
     conductor.perform(
-      Flutter,
-      :account_name => "realntl",
+      Examples::FizzBuzz,
+      :up_to => 16,
     )
-  end
-
-  def expected_telemetry
-    {
-      :performance_name => "Flutter",
-      :input => { :account_name => "realntl" },
-
-      :movements => {
-        :collect_flutter_followers => {
-          :input => {
-            :account_name => "realntl",
-          },
-          :output => {
-            :follower_list => [{:account_name=>"mister_ed", :email=>nil}, {:account_name=>"captain_sheridan", :email=>"captain_sheridan@babylon5.earth.gov"}],
-          },
-        },
-        :fetch_follower_rating => {
-          :input => {
-            :follower_list => [{:account_name=>"mister_ed", :email=>nil}, {:account_name=>"captain_sheridan", :email=>"captain_sheridan@babylon5.earth.gov"}],
-          },
-          :output => {
-            :follower_ratings => { "captain_sheridan" => 4.5, "mister_ed" => 3.5 },
-          },
-        },
-        :filter_followers => {
-          :input => {
-            :follower_list => [{:account_name=>"mister_ed", :email=>nil}, {:account_name=>"captain_sheridan", :email=>"captain_sheridan@babylon5.earth.gov"}],
-            :follower_ratings => { "captain_sheridan" => 4.5, "mister_ed" => 3.5 },
-          },
-          :output => {
-            :email_addresses => ['captain_sheridan@babylon5.earth.gov'],
-          },
-        },
-      },
-
-      :service_calls => [
-        {
-          :service => :http,
-          :method  => "get",
-          :input   => ["flutter.io", "/users/realntl/followers"],
-          :output  => "[{\"username\":\"mister_ed\",\"email_eddress\":\"ed@mistered.com\"},{\"username\":\"captain_sheridan\",\"email_address\":\"captain_sheridan@babylon5.earth.gov\"}]",
-        },{
-          :service => :db,
-          :method  => "execute",
-          :input   => ["SELECT AVG(rating), account_name FROM ratings WHERE account_name IN (\"mister_ed\", \"captain_sheridan\") GROUP BY account_name"],
-          :output  => [[4.5, "captain_sheridan"], [3.5, "mister_ed"]],
-        },
-      ],
-    }
   end
 
   class TelemetryRecorder

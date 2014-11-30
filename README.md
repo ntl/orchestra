@@ -172,7 +172,8 @@ InvitationService = Orchestra.define_operation do
     depends_on :blacklist
     modifies :followers
     perform do
-      followers.reject! do |account_name|
+      followers.reject! do |follower|
+        account_name = follower.fetch 'username'
         blacklist.include? account_name
       end
     end
@@ -180,11 +181,12 @@ InvitationService = Orchestra.define_operation do
 
   node :filter_robots do
     modifies :followers, :collection => true
-    perform do |account_name|
+    perform do |follower|
+      account_name = follower.fetch 'username'
       account = FlutterAPI.get_account account_name
       next unless account['following'] > ROBOT_FOLLOWER_THRESHHOLD
       next unless account['following'] > (account['followers'] / 2)
-      account_name
+      follower
     end
   end
 
@@ -315,7 +317,8 @@ class FilterRobots
     @followers = followers
   end
 
-  def perform account_name
+  def perform follower
+    account_name = follower.fetch 'account_name'
     account = FlutterAPI.get_account account_name
     next unless account['following'] > ROBOT_FOLLOWER_THRESHHOLD
     next unless account['following'] > (account['followers'] / 2)
@@ -501,6 +504,12 @@ And a recording can be replayed:
 
 ```ruby
 Orchestra.replay_recording InvitationService, service_recording
+```
+
+You can override the inputs passed in when replaying:
+
+```ruby
+Orchestra.replay_recording InvitationService, service_recording, :account_name => "dhh"
 ```
 
 If you want to serialize/persist the recording, just use `#to_h`:

@@ -44,9 +44,14 @@ module Orchestra
           end
         end
 
-        def modifies *provisions
-          depends_on *provisions
-          provides *provisions
+        def modifies provision, args = {}
+          collection, _ = Util.extract_key_args args, :collection => false
+          if collection
+            iterates_over provision
+          else
+            depends_on provision
+          end
+          provides provision
         end
 
         def provides *provisions

@@ -1,32 +1,39 @@
 class ReplayableOperationTest < Minitest::Test
-  include Flutter.test_setup
+  include Examples::InvitationService::TestSetup
 
   def test_replaying_an_operation
-    service_recording = perform
+    recording = perform_for_real
 
-    assert_equal ["captain_sheridan@babylon5.earth.gov"], service_recording[:output]
+    smtp_service = build_example_smtp
 
     second_result = Orchestra.replay_recording(
-      Flutter,
-      service_recording,
+      Examples::InvitationService,
+      recording,
+      :smtp => smtp_service,
     )
 
-    assert_equal ["captain_sheridan@babylon5.earth.gov"], second_result
+    assert_equal(
+      ["captain_sheridan@babylon5.earth.gov"],
+      smtp_service.delivered.keys,
+    )
   end
 
   private
 
-  def perform
+  def perform_for_real
+    mock_smtp = build_example_smtp
     db = build_example_database
     stub_followers_request
+    stub_accounts_requests
 
     conductor = Orchestra::Conductor.new(
-      :http => Net::HTTP,
       :db   => db,
+      :http => Net::HTTP,
+      :smtp => mock_smtp,
     )
 
     recording = conductor.perform_with_recording(
-      Flutter,
+      Examples::InvitationService,
       :account_name => 'realntl',
     )
 
