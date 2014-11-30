@@ -42,4 +42,26 @@ class DSLTest < Minitest::Test
 
     assert_equal 44, Orchestra.perform(operation, :string => "11")
   end
+
+  def test_must_supply_result
+    error = assert_raises ArgumentError do
+      Orchestra.define_operation do
+        node :foo do
+          perform do 'foo' end
+        end
+      end
+    end
+
+    assert_equal "Must supply a result", error.message
+  end
+
+  def test_must_contain_at_least_one_node
+    error = assert_raises ArgumentError do
+      Orchestra.define_operation do
+        self.result = :foo
+      end
+    end
+
+    assert_equal "Must supply at least one node", error.message
+  end
 end

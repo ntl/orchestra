@@ -9,6 +9,8 @@ module Orchestra
         end
 
         def build_operation
+          raise ArgumentError, "Must supply a result" if @result.nil?
+          raise ArgumentError, "Must supply at least one node" if @nodes.empty?
           Operation.new(
             :nodes => @nodes,
             :result => @result,
