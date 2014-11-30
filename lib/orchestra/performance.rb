@@ -48,8 +48,8 @@ module Orchestra
       end
     end
 
-    def fetch key
-      state.fetch key 
+    def extract_result result
+      state.fetch result
     end
 
     def publish event, *payload

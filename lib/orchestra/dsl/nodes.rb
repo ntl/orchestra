@@ -44,6 +44,11 @@ module Orchestra
           end
         end
 
+        def modifies *provisions
+          depends_on *provisions
+          provides *provisions
+        end
+
         def provides *provisions
           @builder.provisions.concat provisions
         end

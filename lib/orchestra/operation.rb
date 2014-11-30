@@ -3,7 +3,8 @@ module Orchestra
     attr :registry, :result, :nodes
 
     def initialize args = {}
-      @result, @nodes = Util.extract_key_args args, :result, :nodes => {}
+      @result, @command, @nodes = Util.extract_key_args args,
+        :result, :command => false, :nodes => {}
     end
 
     def start_performance *args
@@ -18,9 +19,13 @@ module Orchestra
     def perform *args, &block
       performance = start_performance *args, &block
       performance.perform
-      output = performance.fetch result
+      output = performance.extract_result result
       performance.publish :performance_finished, name, output
-      output
+      @command ? nil : output
+    end
+
+    def command?
+      @command ? true : false
     end
 
     private

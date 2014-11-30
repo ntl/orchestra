@@ -2,7 +2,7 @@ module Orchestra
   module DSL
     module Operations
       class Builder
-        attr_writer :result
+        attr_writer :command, :result
 
         def initialize
           @nodes = {}
@@ -12,19 +12,17 @@ module Orchestra
           raise ArgumentError, "Must supply a result" if @result.nil?
           raise ArgumentError, "Must supply at least one node" if @nodes.empty?
           Operation.new(
-            :nodes => @nodes,
-            :result => @result,
+            :command => @command,
+            :nodes   => @nodes,
+            :result  => @result,
           )
         end
 
         def add_node name_or_object, args = {}, &block
-          case name_or_object
-          when ::String, ::Symbol then
-            name = name_or_object
-            node = Node::InlineNode.build &block
-          else
-            name = Util.to_snake_case Util.demodulize name_or_object.name
-            node = ObjectAdapter.build_node name_or_object, args
+          name, node = case name_or_object
+          when nil then build_anonymous_node block
+          when ::String, ::Symbol then build_inline_node name_or_object, block
+          else build_object_node name_or_object, args
           end
           node.provisions << name.to_sym if node.provisions.empty?
           set_node name.to_sym, node
@@ -36,6 +34,26 @@ module Orchestra
           end
           @nodes[name] = node
           node.freeze
+        end
+
+        def build_anonymous_node block
+          node = Node::InlineNode.build &block
+          unless node.provisions.size == 1
+            raise ArgumentError, "Could not infer name for node from a provision"
+          end
+          name = node.provisions.fetch 0
+          [name, node]
+        end
+
+        def build_inline_node name, block
+          node = Node::InlineNode.build &block
+          [name, node]
+        end
+
+        def build_object_node object, args
+          name = Util.to_snake_case Util.demodulize object.name
+          node = ObjectAdapter.build_node object, args
+          [name, node]
         end
       end
 
@@ -61,9 +79,16 @@ module Orchestra
           nil
         end
 
-        def result args = {}, &block
-          @builder.add_node :result, &block
-          self.result = :result
+        def result name = nil, &block
+          node = @builder.add_node name, &block
+          name ||= node.provisions.fetch 0
+          self.result = name
+        end
+
+        def finally name = :__finally__, &block
+          @builder.add_node name, &block
+          @builder.command = true
+          self.result = name
         end
       end
     end
