@@ -1,5 +1,5 @@
 module Examples
-  InvitationService = Orchestra.define_operation do
+  InvitationService = Orchestra.define do
     DEFAULT_MESSAGE = "I would really love for you to try out MyApp."
     ROBOT_FOLLOWER_THRESHHOLD = 500
 

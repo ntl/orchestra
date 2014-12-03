@@ -53,7 +53,7 @@ module OperationTest
     end
 
     def test_missing_input_errors
-      operation = Orchestra.define_operation do
+      operation = Orchestra.define do
         node :foo do
           depends_on :bar
           perform do bar + bar end
@@ -79,7 +79,7 @@ module OperationTest
     private
 
     def build_simple_operation
-      Orchestra.define_operation do
+      Orchestra.define do
         node :split do
           depends_on :sentence
           provides :word_list
@@ -102,7 +102,7 @@ module OperationTest
     end
 
     def build_mutator
-      Orchestra.define_operation do
+      Orchestra.define do
         node :carrots do
           depends_on :shopping_list
           provides :shopping_list
@@ -162,7 +162,7 @@ module OperationTest
 
   class EmbeddingOperationsTest < Minitest::Test
     def test_embedding_operations
-      inner = Orchestra.define_operation do
+      inner = Orchestra.define do
         node :double do
           depends_on :number
           provides :doubled
@@ -175,7 +175,7 @@ module OperationTest
         end
       end
 
-      outer = Orchestra.define_operation do
+      outer = Orchestra.define do
         node inner
 
         result :squared do

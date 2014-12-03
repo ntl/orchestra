@@ -2,7 +2,7 @@ class MultithreadingTest < Minitest::Test
   CustomError = Class.new StandardError
 
   def setup
-    @operation = Orchestra.define_operation do
+    @operation = Orchestra.define do
       node :map_thread_ids do
         iterates_over :list
         provides :thread_ids

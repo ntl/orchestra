@@ -23,7 +23,7 @@ Or install it yourself as:
 Here's a simple example without a lot of context:
 
 ```ruby
-operation = Orchestra.define_operation do
+operation = Orchestra.define do
   node :make_array do
     depends_on :up_to
     provides :array
@@ -151,7 +151,7 @@ Objects like `InvitationService` are not fun to work with.
 Here is a simple translation of the above `InvitationService` into an orchestration:
 
 ```ruby
-InvitationService = Orchestra.define_operation do
+InvitationService = Orchestra.define do
   DEFAULT_MESSAGE = "I would really love for you to try out MyApp."
   ROBOT_FOLLOWER_THRESHHOLD = 500
 
@@ -273,7 +273,7 @@ Configuring the operation is rather simple. You define the various nodes, and th
 The first is very straightforward:
 
 ```ruby
-Orchestra.define_operation do
+Orchestra.define do
   node :foo do
     depends_on :bar
     provides :foo # optional, since the node is called :foo
@@ -287,7 +287,7 @@ end
 The second is just a shortened form of the first:
 
 ```ruby
-Orchestra.define_operation do
+Orchestra.define do
   # Define a node called :foo and make it the result
   result :foo do
     depends_on :bar
@@ -299,7 +299,7 @@ end
 The third is a minor variation of the second. The only difference is that the operation will always return `true`. `finally` makes sense for operations that perform side effects (e.g. Command objects), wherease `result` will make sense for queries.
 
 ```ruby
-Orchestra.define_operation do
+Orchestra.define do
   finally :foo do
     depends_on :bar
     perform do … end
@@ -419,7 +419,7 @@ What did this buy us? Two big things. We can now attach *observers* to the perfo
 Additionally, you can pass the `conductor` into nodes. In this way you can embed one orchestration into another:
 
 ```ruby
-inner_operation = Orchestra.define_operation do
+inner_operation = Orchestra.define do
   result :foo do
     provides :bar
     perform do
@@ -428,7 +428,7 @@ inner_operation = Orchestra.define_operation do
   end
 end
 
-outer_operation = Orchestra.define_operation do
+outer_operation = Orchestra.define do
   result :baz do
     depends_on :conductor
     provides :qux
@@ -445,7 +445,7 @@ conductor.perform outer_operation
 To shorten this, the inner operation can be "mounted" inside the outer operation:
 
 ```ruby
-inner_operation = Orchestra.define_operation do
+inner_operation = Orchestra.define do
   result :foo do
     provides :bar
     perform do
@@ -454,7 +454,7 @@ inner_operation = Orchestra.define_operation do
   end
 end
 
-outer_operation = Orchestra.define_operation do
+outer_operation = Orchestra.define do
   result inner_operation
 end
 ```
