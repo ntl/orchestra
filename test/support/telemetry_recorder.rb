@@ -23,11 +23,12 @@ class TelemetryRecorder
       :performance_name => operation_name,
       :service_calls => [],
     )
+    @embedded = true
   end
 
   def handle_performance_finished operation_name, output
-    return if embedded?
     @store[:output] = output
+    @embedded = false
   end
 
   def handle_node_entered name, input
@@ -36,14 +37,6 @@ class TelemetryRecorder
 
   def handle_node_exited name, output
     @nodes[name][:output] = output
-  end
-
-  def handle_operation_entered operation
-    @embedded = true
-  end
-
-  def handle_operation_exited operation
-    @embedded = false
   end
 
   def handle_error_raised error

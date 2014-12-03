@@ -125,11 +125,8 @@ module Orchestra
 
       def build_context performance
         conductor = performance.registry[:conductor]
-        performance.publish :operation_entered, node
         copy_observers = conductor.method :copy_observers
-        embedded = node.start_performance conductor, input, &copy_observers
-        performance.publish :operation_exited, node
-        embedded
+        node.start_performance conductor, input, &copy_observers
       end
 
       def input
