@@ -12,7 +12,7 @@ class DSLTest < Minitest::Test
 
   def test_two_nodes_one_name
     error = assert_raises ArgumentError do
-      Orchestra.define do
+      Orchestra::Operation.new do
         node :foo do
           depends_on :bar
           perform do bar + bar end
@@ -28,19 +28,19 @@ class DSLTest < Minitest::Test
   end
 
   def test_result_node
-    operation = Orchestra.define do
+    operation = Orchestra::Operation.new do
       result :foo do perform do 'foo' end end
     end
     assert_equal :foo, operation.result
 
     error = assert_raises ArgumentError do
-      operation = Orchestra.define do
+      operation = Orchestra::Operation.new do
         result do perform do 'foo' end end
       end
     end
     assert_equal "Could not infer name for node from a provision", error.message
 
-    operation = Orchestra.define do
+    operation = Orchestra::Operation.new do
       result do
         provides :foo
         perform do 'foo' end
@@ -50,7 +50,7 @@ class DSLTest < Minitest::Test
   end
 
   def test_command_operations_using_finally
-    operation = Orchestra.define do
+    operation = Orchestra::Operation.new do
       node :unnecessary do
         provides :baz
         perform do raise "Can't get here" end
@@ -85,7 +85,7 @@ class DSLTest < Minitest::Test
   end
 
   def test_modifies
-    operation = Orchestra.define do
+    operation = Orchestra::Operation.new do
       result do
         modifies :list
         perform do list << :foo end
@@ -100,7 +100,7 @@ class DSLTest < Minitest::Test
 
   def test_must_supply_result
     error = assert_raises ArgumentError do
-      Orchestra.define do
+      Orchestra::Operation.new do
         node :foo do
           perform do 'foo' end
         end
@@ -112,7 +112,7 @@ class DSLTest < Minitest::Test
 
   def test_must_contain_at_least_one_node
     error = assert_raises ArgumentError do
-      Orchestra.define do
+      Orchestra::Operation.new do
         self.result = :foo
       end
     end

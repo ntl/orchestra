@@ -10,12 +10,6 @@ module Orchestra
     Configuration.module_eval &block
   end
 
-  def define &block
-    builder = DSL::Operations::Builder.new
-    DSL::Operations::Context.evaluate builder, &block
-    builder.build_operation
-  end
-
   def perform operation, inputs = {}
     Conductor.new.perform operation, inputs
   end

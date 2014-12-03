@@ -1,5 +1,15 @@
 module Orchestra
   class Operation < Module
+    def self.new *args, &block
+      return super unless block_given?
+      unless args.empty?
+        raise ArgumentError, "wrong number of arguments (#{args.size} for 0)"
+      end
+      builder = DSL::Operations::Builder.new
+      DSL::Operations::Context.evaluate builder, &block
+      builder.build_operation
+    end
+
     extend Forwardable
 
     def_delegators :@default_run_list, :node_names, :provisions, :dependencies,

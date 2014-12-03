@@ -27,7 +27,7 @@ class ObjectAdapterTest < Minitest::Test
   end
 
   def test_performing_an_operation_with_integrated_objects
-    operation = Orchestra.define do
+    operation = Orchestra::Operation.new do
       node Splitter, :provides => :words
       node Upcaser, :iterates_over => :words, :provides => :upcased_words, :method => :call
       node Bolder, :iterates_over => :upcased_words, :provides => :bolded_words, :method => :call
@@ -49,7 +49,7 @@ class ObjectAdapterTest < Minitest::Test
 
   def test_provent_singleton_objects_from_handling_collections
     error = assert_raises ArgumentError do
-      Orchestra.define do
+      Orchestra::Operation.new do
         node Splitter, :iterates_over => :sentence
       end
     end

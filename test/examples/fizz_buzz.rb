@@ -1,5 +1,5 @@
 module Examples
-  FizzBuzz = Orchestra.define do
+  FizzBuzz = Orchestra::Operation.new do
     node :make_array do
       depends_on :up_to
       provides :array
