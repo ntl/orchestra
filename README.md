@@ -503,13 +503,13 @@ recording.output # <-- the usual output is attached to the recording itself
 And a recording can be replayed:
 
 ```ruby
-Orchestra.replay_recording InvitationService, service_recording
+Orchestra.replay_recording InvitationService, recording
 ```
 
 You can override the inputs passed in when replaying:
 
 ```ruby
-Orchestra.replay_recording InvitationService, service_recording, :account_name => "dhh"
+Orchestra.replay_recording InvitationService, recording, :account_name => "dhh"
 ```
 
 If you want to serialize/persist the recording, just use `#to_h`:
