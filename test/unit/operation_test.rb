@@ -8,6 +8,16 @@ class OperationTest < Minitest::Test
     )
   end
 
+  def test_performing_operation_without_inputs
+    operation = build_simple_operation
+
+    error = assert_raises Orchestra::MissingInputError do
+      operation.perform
+    end
+
+    assert_equal %(Missing input :sentence), error.message
+  end
+
   def test_mutating_inputs
     operation = build_mutator
 

@@ -31,8 +31,8 @@ module Orchestra
     private
 
     def extract_args args
-      conductor = args.size == 1 ? Conductor.new : args.shift
-      input = args.last
+      conductor = args.size > 1 ? args.shift : Conductor.new
+      input = args.fetch 0 do {} end
       [conductor, input]
     end
   end
