@@ -2,19 +2,19 @@ class ReplayableOperationTest < Minitest::Test
   include Examples::InvitationService::TestSetup
 
   def test_replaying_an_operation_from_recording_object
-    recording_object = perform_for_real
-    smtp_service = replay_operation_from recording_object
+    # Perform the operation against real services, saving a recording
+    recording = perform_for_real
 
-    assert_equal(
-      ["captain_sheridan@babylon5.earth.gov"],
-      smtp_service.delivered.keys,
+    # Replay the operation, directing SMTP to an alternative service object
+    smtp_service = build_example_smtp
+    Orchestra.replay_recording(
+      Examples::InvitationService,
+      recording,
+      :smtp => smtp_service,
     )
-  end
 
-  def test_replaying_an_operation_from_hash
-    recording_hash = perform_for_real.to_h
-    smtp_service = replay_operation_from recording_hash
-
+    # While replaying, the operation delivered all email using the alterantive
+    # SMTP service object we passed in
     assert_equal(
       ["captain_sheridan@babylon5.earth.gov"],
       smtp_service.delivered.keys,
@@ -22,17 +22,6 @@ class ReplayableOperationTest < Minitest::Test
   end
 
   private
-
-  def replay_operation_from(recording)
-    smtp_service = build_example_smtp
-
-    second_result = Orchestra.replay_recording(
-      Examples::InvitationService,
-      recording,
-      :smtp => smtp_service,
-    )
-    smtp_service
-  end
 
   def perform_for_real
     mock_smtp = build_example_smtp
