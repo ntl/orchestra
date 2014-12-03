@@ -469,8 +469,8 @@ conductor.add_observer MyObserver
 class MyObserver
   def update event_name, *args
     case event_name
-    when :performance_started then "Hello"
-    when :performance_finished then "World!"
+    when :operation_entered then "Hello"
+    when :operation_exited then "World!"
     when :node_entered then "Hello from within a node"
     when :node_exited then "Goodbye from within a node"
     when :error_raised then "Ruh roh!"
@@ -483,8 +483,8 @@ The arguments passed to `update` will vary based on the event:
 
 | Event                    | First argument                       | Second argument                   |
 | ------------------------ | ------------------------------------ | --------------------------------- |
-| `:performance_started`   | The name of the operation starting   | Input going into the performance  |
-| `:performance_finished`  | The name of the operation finishing  | Output of the performance         |
+| `:operation_entered`     | The name of the operation starting   | Input going into the operation    |
+| `:operation_exited`      | The name of the operation finishing  | Output of the operation           |
 | `:node_entered`          | The name of the node                 | Input going into the node         |
 | `:node_exited`           | The name of the node                 | Output of the node                |
 | `:error_raised`          | The error itself                     | `nil`                             |

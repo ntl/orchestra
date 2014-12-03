@@ -11,9 +11,9 @@ module Orchestra
       when :service_accessed then
         service_name, recording = args
         @services[service_name] << recording
-      when :performance_started then
+      when :operation_entered then
         _, @input = args
-      when :performance_finished then
+      when :operation_exited then
         _, @output = args
       else
       end

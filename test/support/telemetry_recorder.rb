@@ -14,7 +14,7 @@ class TelemetryRecorder
     @embedded
   end
 
-  def handle_performance_started operation_name, input
+  def handle_operation_entered operation_name, input
     return if embedded?
     @nodes = Hash.new do |hsh, key| hsh[key] = {} end
     @store.update(
@@ -26,7 +26,7 @@ class TelemetryRecorder
     @embedded = true
   end
 
-  def handle_performance_finished operation_name, output
+  def handle_operation_exited operation_name, output
     @store[:output] = output
     @embedded = false
   end

@@ -22,7 +22,7 @@ module Orchestra
       run_list = RunList.build nodes, result, input.keys
       performance = Performance.new conductor, run_list, input
       yield performance if block_given?
-      performance.publish :performance_started, name, input
+      performance.publish :operation_entered, name, input
       performance
     end
 
@@ -30,7 +30,7 @@ module Orchestra
       performance = start_performance *args, &block
       performance.perform
       output = performance.extract_result result
-      performance.publish :performance_finished, name, output
+      performance.publish :operation_exited, name, output
       @command ? nil : output
     end
 

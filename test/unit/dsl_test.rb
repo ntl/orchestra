@@ -72,7 +72,7 @@ class DSLTest < Minitest::Test
       extend self
       attr :result
       def update event, *args
-        return unless event == :performance_finished
+        return unless event == :operation_exited
         _, @result = args
       end
     end
