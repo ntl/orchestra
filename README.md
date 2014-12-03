@@ -296,7 +296,7 @@ Orchestra::Operation.new do
 end
 ```
 
-The third is a minor variation of the second. The only difference is that the operation will always return `true`. `finally` makes sense for operations that perform side effects (e.g. Command objects), wherease `result` will make sense for queries.
+The third is a minor variation of the second. The only difference is that the operation will always return `true`. `finally` makes sense for operations that perform side effects (e.g. Command objects), whereas `result` will make sense for queries.
 
 ```ruby
 Orchestra::Operation.new do
@@ -493,7 +493,7 @@ Embedded performances will inherit the observers of the outer operation.
 
 ## Recording and playing back services
 
-The final main feature of Orchestra is the ability to record the service calls throughout an operation. These recordings can then be used to replay operations. This could be helpful, for instance, to attach to exceptions in your exception logging service so that programmers can replay failed performances on their development environments. In addition, these recordings could be used to drive integration testing. Thus, instead of using separate tools such as like ActiveRecord fixtures, FactoryGirl, and VCR for every service dependency, you can test your operations with one single setup artifact.
+The final main feature of Orchestra is the ability to record the service calls throughout an operation. These recordings can then be used to replay operations. This could be helpful, for instance, to attach to exceptions in your exception logging service so that programmers can replay failed performances on their development environments. In addition, these recordings could be used to drive integration testing. Thus, instead of using separate tools such as ActiveRecord fixtures, FactoryGirl, and VCR for every service dependency, you can test your operations with one single setup artifact.
 
 You can record a performance on any `Conductor` by calling `#record` instead of `#perform`:
 
