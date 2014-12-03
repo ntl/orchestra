@@ -4,7 +4,7 @@ require "minitest/mock"
 require "stringio"
 require "webmock/minitest"
 
-Dir['test/examples/**/*.rb'].each &method(:load)
+Dir['test/examples/**/*.rb'].each &method(:load) unless defined? Examples
 
 WebMock.disable_net_connect!
 

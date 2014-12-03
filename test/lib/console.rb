@@ -6,19 +6,35 @@ module Console
     Bundler.require "debugger_#{RUBY_ENGINE}"
     define_reload
     define_rake
+    load_examples
     clean_backtraces
     puts <<-MESSAGE
 Debug console. Type `rake` to run the test suite. `bin/rake` also works for
 develompent environments that rely on binstubs.
+
+The example operations located in `test/examples` are loaded for you. To try one
+out:
+
+    [1] pry(Orchestra)> Orchestra.perform Examples::FizzBuzz, :up_to => 16, :io => $stdout
+
+See the README.md as well as the examples themselves for more information. You
+will need to reload the examples after raking (or invoking reload!)
     MESSAGE
+  end
+
+  def load_examples
+    Dir["test/examples/**/*.rb"].each do |example_rb| Kernel.load example_rb end
   end
 
   def define_reload
     Pry::Commands.block_command "reload!", "Reload gem code" do
       puts "Reloading..."
-      Object.send :remove_const, :Orchestra if defined? Orchestra
-      load "lib/orchestra.rb"
-      _pry_.binding_stack.push Orchestra.__binding__
+      Object.send :remove_const, :Examples if Object.const_defined? :Examples
+      Object.send :remove_const, :Orchestra if Object.const_defined? :Orchestra
+      Kernel.load "lib/orchestra.rb"
+      Console.load_examples
+      orchestra = Object.const_get :Orchestra
+      _pry_.binding_stack.push orchestra.__binding__
       _pry_.binding_stack.shift
     end
   end
