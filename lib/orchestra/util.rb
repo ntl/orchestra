@@ -23,6 +23,18 @@ module Orchestra
       [hsh, ary]
     end
 
+    def recursively_symbolize obj
+      case obj
+      when Array
+        obj.map &method(:recursively_symbolize)
+      when Hash then
+        obj.each_with_object Hash.new do |(k, v), out_hsh|
+          out_hsh[k.to_sym] = recursively_symbolize v
+        end
+      else obj
+      end
+    end
+
     def to_lazy_thunk obj
       if obj.respond_to? :to_proc and not obj.is_a? Symbol
         obj

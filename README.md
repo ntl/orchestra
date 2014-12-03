@@ -514,18 +514,19 @@ You can override the inputs passed in when replaying:
 Orchestra.replay_recording InvitationService, recording, :account_name => "dhh"
 ```
 
-If you want to serialize/persist the recording, just use `#to_h`:
+If you want to serialize/persist the recording, just use `JSON.dump`:
 
 ```ruby
-File.write "/tmp/recording.json", JSON.dump(recording.to_h)
+json = JSON.dump recording
+File.write "/tmp/recording.json", json
 ```
 
-And persisted recordings can be replayed as well
+You can replay the recording using `JSON.load`:
 
 ```ruby
-json_string = File.read "tmp/recording.json"
-hashed_recording = JSON.parse(json_string)
-Orchestra.replay_recording InvitationService, hashed_recording
+json = File.read "tmp/recording.json"
+recording = JSON.load json
+Orchestra.replay_recording InvitationService, recording
 ```
 
 

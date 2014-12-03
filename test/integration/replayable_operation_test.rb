@@ -1,15 +1,21 @@
 class ReplayableOperationTest < Minitest::Test
   include Examples::InvitationService::TestSetup
 
-  def test_replaying_an_operation_from_recording_object
+  def test_replaying_an_operation_from_a_previous_recording
     # Perform the operation against real services, saving a recording
     recording = perform_for_real
+
+    # Write the recording out to a file. In this case, a StringIO is used for
+    # simplicity, and we serialize into JSON
+    file = StringIO.new
+    file.write JSON.dump recording
+    file.rewind
 
     # Replay the operation, directing SMTP to an alternative service object
     smtp_service = build_example_smtp
     Orchestra.replay_recording(
       Examples::InvitationService,
-      recording,
+      JSON.load(file.read),
       :smtp => smtp_service,
     )
 
