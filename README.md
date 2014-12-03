@@ -7,7 +7,7 @@ Seamlessly chain multiple command or query objects together with a simple, light
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'orchestra'
+gem 'ntl-orchestra'
 ```
 
 And then execute:
@@ -16,7 +16,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install orchestra
+    $ gem install ntl-orchestra
 
 ## Usage
 

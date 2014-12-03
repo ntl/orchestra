@@ -1,10 +1,10 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+$LOAD_PATH.unshift lib unless $LOAD_PATH.include?(lib)
 require 'orchestra/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "orchestra"
+  spec.name          = "ntl-orchestra"
   spec.version       = Orchestra::VERSION
   spec.authors       = ["ntl"]
   spec.email         = ["nathanladd+github@gmail.com"]
