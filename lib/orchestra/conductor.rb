@@ -16,7 +16,7 @@ module Orchestra
       end
     end
 
-    def perform_with_recording *args
+    def record *args
       recording = Recording.new
       add_observer recording
       perform *args do |performance|

@@ -495,10 +495,10 @@ Embedded performances will inherit the observers of the outer operation.
 
 The final main feature of Orchestra is the ability to record the service calls throughout an operation. These recordings can then be used to replay operations. This could be helpful, for instance, to attach to exceptions in your exception logging service so that programmers can replay failed performances on their development environments. In addition, these recordings could be used to drive integration testing. Thus, instead of using separate tools such as like ActiveRecord fixtures, FactoryGirl, and VCR for every service dependency, you can test your operations with one single setup artifact.
 
-You can record a performance on any `Conductor`:
+You can record a performance on any `Conductor` by calling `#record` instead of `#perform`:
 
 ```ruby
-recording = conductor.perform_with_recording InvitationService, :account_name => 'realntl'
+recording = conductor.record InvitationService, :account_name => 'realntl'
 recording.output # <-- the usual output is attached to the recording itself
 ```
 

@@ -41,7 +41,7 @@ class ReplayableOperationTest < Minitest::Test
       :smtp => mock_smtp,
     )
 
-    recording = conductor.perform_with_recording(
+    recording = conductor.record(
       Examples::InvitationService,
       :account_name => 'realntl',
     )
