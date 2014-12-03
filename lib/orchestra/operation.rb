@@ -13,10 +13,6 @@ module Orchestra
       @default_run_list = RunList.build nodes, result, []
     end
 
-    def build_context input
-      start_performance input
-    end
-
     def process output
       output.select do |key, _| key = result end
     end

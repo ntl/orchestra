@@ -69,7 +69,7 @@ class RecordingTelemetryTest < Minitest::Test
           :output => { :print => [] },
         }
       },
-      :output => nil,
+      :output => [],
     }
   end
 
@@ -82,43 +82,5 @@ class RecordingTelemetryTest < Minitest::Test
       Examples::FizzBuzz,
       :up_to => 16,
     )
-  end
-
-  class TelemetryRecorder
-    def initialize store
-      @store = store
-      @current_operation = nil
-    end
-
-    def update message, *payload
-      method = "handle_#{message}"
-      public_send method, *payload if respond_to? method
-    end
-
-    def handle_performance_started operation_name, input
-      @nodes = Hash.new do |hsh, key| hsh[key] = {} end
-      @store.update(
-        :input => input,
-        :movements => @nodes,
-        :performance_name => operation_name,
-        :service_calls => [],
-      )
-    end
-
-    def handle_node_entered name, input
-      @nodes[name][:input] = input
-    end
-
-    def handle_node_exited name, output
-      @nodes[name][:output] = output
-    end
-
-    def handle_error_raised error
-      @store[:error] = error
-    end
-
-    def handle_service_accessed service_name, record
-      @store[:service_calls].<< record.merge :service => service_name
-    end
   end
 end

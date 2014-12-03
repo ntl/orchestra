@@ -48,7 +48,7 @@ module Orchestra
 
         def build_embedded_operation_node operation
           name = object_name operation
-          [name, operation]
+          [name || operation.result, operation]
         end
 
         def build_inline_node name, block
@@ -65,8 +65,7 @@ module Orchestra
         private
 
         def object_name object
-          object_name = object.name || 'anonymous'
-          Util.to_snake_case Util.demodulize object_name
+          object.name and Util.to_snake_case Util.demodulize object.name
         end
       end
 

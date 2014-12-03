@@ -1,6 +1,6 @@
 module Orchestra
   class Conductor
-    attr :services, :thread_pool
+    attr :observers, :services, :thread_pool
 
     def initialize services = {}
       @services = services
@@ -9,11 +9,9 @@ module Orchestra
       self.thread_count = Configuration.thread_count
     end
 
-    def perform operation, input
+    def perform operation, input = {}
       operation.perform self, input do |performance|
-        @observers.each do |observer|
-          performance.add_observer observer
-        end
+        copy_observers performance
         yield performance if block_given?
       end
     end
@@ -30,15 +28,21 @@ module Orchestra
     end
 
     def add_observer observer
-      @observers << observer
+      observers << observer
     end
 
     def delete_observer observer
-      @observers.delete observer
+      observers.delete observer
+    end
+
+    def copy_observers observable
+      add_observer = observable.method :add_observer
+      observers.each &add_observer
     end
 
     def build_registry observable
-      services.each_with_object Hash.new do |(service_name, _), hsh|
+      hsh = { :conductor => self }
+      services.each_with_object hsh do |(service_name, _), hsh|
         service = resolve_service observable, service_name
         hsh[service_name] = service if service
       end

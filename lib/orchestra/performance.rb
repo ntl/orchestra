@@ -6,14 +6,14 @@ module Orchestra
     def_delegators :@run_list, :node_names, :provisions, :dependencies,
       :optional_dependencies, :required_dependencies
 
-    attr :input, :state, :registry, :run_list, :thread_pool
+    attr :conductor, :input, :state, :registry, :run_list
 
     def initialize conductor, run_list, input
+      @conductor = conductor
       @input = input.dup
       @run_list = run_list
       @registry = conductor.build_registry self
       @state = registry.merge input
-      @thread_pool = conductor.thread_pool
     end
 
     def perform
@@ -57,6 +57,10 @@ module Orchestra
       notify_observers event, *payload
     end
 
+    def thread_pool
+      conductor.thread_pool
+    end
+
     class Movement
       def self.perform node, *args
         if node.is_a? Operation
@@ -73,11 +77,15 @@ module Orchestra
       def initialize node, performance
         @node = node
         @performance = performance
-        @context = node.build_context performance.state
+        @context = build_context performance
       end
 
       def perform
         context.perform
+      end
+
+      def build_context performance
+        node.build_context performance.state
       end
     end
 
@@ -112,7 +120,20 @@ module Orchestra
     class EmbeddedOperation < Movement
       def perform
         super
-        context.state
+        context.state.select do |k,_| k == node.result end
+      end
+
+      def build_context performance
+        conductor = performance.registry[:conductor]
+        performance.publish :operation_entered, node
+        copy_observers = conductor.method :copy_observers
+        embedded = node.start_performance conductor, input, &copy_observers
+        performance.publish :operation_exited, node
+        embedded
+      end
+
+      def input
+        performance.state
       end
     end
   end
