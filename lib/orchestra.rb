@@ -21,8 +21,9 @@ module Orchestra
   end
 
   def replay_recording operation, store, input = {}
+    store = store.to_h
     input = input.merge store[:input] || store['input']
-    svc_recordings = store[:service_recordings] || store['service_recordings']
+    svc_recordings = store[:service_recordings]
     Recording.replay operation, input, svc_recordings
   end
 
