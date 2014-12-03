@@ -518,6 +518,15 @@ If you want to serialize/persist the recording, just use `#to_h`:
 File.write "/tmp/recording.json", JSON.dump(recording.to_h)
 ```
 
+And persisted recordings can be replayed as well
+
+```ruby
+json_string = File.read "tmp/recording.json"
+hashed_recording = JSON.parse(json_string)
+Orchestra.replay_recording InvitationService, hashed_recording
+```
+
+
 ## Contributing
 
 1. Fork it ( https://github.com/[my-github-username]/orchestra/fork )
