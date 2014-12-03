@@ -33,7 +33,7 @@ module Orchestra
     end
 
     def perform_node node
-      Movement.perform node, state, thread_pool
+      Movement.perform node, self
     end
 
     def ensure_inputs_are_present!
@@ -59,18 +59,21 @@ module Orchestra
 
     class Movement
       def self.perform node, *args
-        klass = node.collection ? CollectionMovement : self
+        if node.is_a? Operation
+          klass = EmbeddedOperation
+        else
+          klass = node.collection ? CollectionMovement : self
+        end
         instance = klass.new node, *args
         node.process instance.perform
       end
 
-      attr :context, :node, :state, :thread_pool
+      attr :context, :node, :performance
 
-      def initialize node, state, thread_pool = ThreadPool.default
+      def initialize node, performance
         @node = node
-        @state = state
-        @thread_pool = thread_pool
-        @context = node.build_context state
+        @performance = performance
+        @context = node.build_context performance.state
       end
 
       def perform
@@ -93,7 +96,7 @@ module Orchestra
       end
 
       def enqueue_job element, index
-        thread_pool.enqueue do
+        performance.thread_pool.enqueue do
           result = context.perform element
           yield [result, index]
         end
@@ -103,6 +106,13 @@ module Orchestra
         batch = context.fetch_collection
         output = [nil] * batch.size
         [batch, output]
+      end
+    end
+
+    class EmbeddedOperation < Movement
+      def perform
+        super
+        context.state
       end
     end
   end

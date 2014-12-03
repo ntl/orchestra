@@ -105,6 +105,28 @@ class OperationTest < Minitest::Test
     assert_equal "Missing inputs :bar and :qux", error.message
   end
 
+  def test_embedding_operations
+    inner = Orchestra.define_operation do
+      result :doubled do
+        depends_on :number
+        perform do number * 2 end
+      end
+    end
+
+    outer = Orchestra.define_operation do
+      node inner
+
+      result :plus_one do
+        depends_on :doubled
+        perform do doubled + 1 end
+      end
+    end
+
+    result = outer.perform :number => 8
+
+    assert_equal 17, result
+  end
+
   private
 
   def build_simple_operation

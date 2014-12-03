@@ -28,7 +28,8 @@ module Orchestra
     end
 
     def perform input = {}
-      Performance::Movement.perform self, input.dup
+      performance = Performance.new Conductor.new, {}, input
+      Performance::Movement.perform self, performance
     end
 
     def process raw_output

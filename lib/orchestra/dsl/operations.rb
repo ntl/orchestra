@@ -21,6 +21,7 @@ module Orchestra
         def add_node name_or_object, args = {}, &block
           name, node = case name_or_object
           when nil then build_anonymous_node block
+          when Operation then build_embedded_operation_node name_or_object
           when ::String, ::Symbol then build_inline_node name_or_object, block
           else build_object_node name_or_object, args
           end
@@ -45,15 +46,27 @@ module Orchestra
           [name, node]
         end
 
+        def build_embedded_operation_node operation
+          name = object_name operation
+          [name, operation]
+        end
+
         def build_inline_node name, block
           node = Node::InlineNode.build &block
           [name, node]
         end
 
         def build_object_node object, args
-          name = Util.to_snake_case Util.demodulize object.name
+          name = object_name object
           node = ObjectAdapter.build_node object, args
           [name, node]
+        end
+
+        private
+
+        def object_name object
+          object_name = object.name || 'anonymous'
+          Util.to_snake_case Util.demodulize object_name
         end
       end
 

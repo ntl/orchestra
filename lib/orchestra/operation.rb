@@ -1,10 +1,24 @@
 module Orchestra
   class Operation < Module
+    extend Forwardable
+
+    def_delegators :@default_run_list, :node_names, :provisions, :dependencies,
+      :optional_dependencies, :required_dependencies
+
     attr :registry, :result, :nodes
 
     def initialize args = {}
       @result, @command, @nodes = Util.extract_key_args args,
         :result, :command => false, :nodes => {}
+      @default_run_list = RunList.build nodes, result, []
+    end
+
+    def build_context input
+      start_performance input
+    end
+
+    def process output
+      output.select do |key, _| key = result end
     end
 
     def start_performance *args
