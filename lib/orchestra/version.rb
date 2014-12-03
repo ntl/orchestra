@@ -1,3 +1,3 @@
 module Orchestra
-  VERSION = "0.9.0" unless defined? VERSION
+  VERSION = "0.9.1" unless defined? VERSION
 end
