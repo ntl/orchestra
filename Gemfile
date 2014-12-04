@@ -5,7 +5,7 @@ gemspec
 
 group :test do
   gem "minitest"
-  gem "minitest-red_green"
+  gem "minitest-red_green", ">= 0.9.3"
   gem "sqlite3"
   gem "webmock"
 end
