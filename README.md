@@ -2,22 +2,6 @@
 
 Seamlessly chain multiple command or query objects together with a simple, lightweight framework.
 
-## Installation
-
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'ntl-orchestra'
-```
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install ntl-orchestra
-
 ## Usage
 
 Here's a simple example without a lot of context:
@@ -529,6 +513,21 @@ recording = JSON.load json
 Orchestra.replay_recording InvitationService, recording
 ```
 
+## Installation
+
+Add this line to your application's Gemfile:
+
+```ruby
+gem 'ntl-orchestra'
+```
+
+And then execute:
+
+    $ bundle
+
+Or install it yourself as:
+
+    $ gem install ntl-orchestra
 
 ## Contributing
 
