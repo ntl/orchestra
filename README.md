@@ -215,7 +215,7 @@ end
 This node depends on something called an `account_name`. This means you must supply `:account_name` when you perform the operation, otherwise, `:fetch_followers` won't work. `orchestra` ensures that your performance can't commence without the required input:
 
 ```ruby
- # Raises Orchestra::MissingInputError: Missing input :account_name
+# Raises Orchestra::MissingInputError: Missing input :account_name
 operation.perform
 # Works correctly
 operation.perform :account_name => 'realntl'
