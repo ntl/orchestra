@@ -20,11 +20,15 @@ class MultithreadingTest < Minitest::Test
   end
 
   def test_multithreading
-    list = (1..50).to_a
+    list = (1..1000).to_a
 
     thread_ids = @conductor.perform @operation, :list => list
 
-    assert thread_ids.uniq.size > 2, "performance must be spread across threads"
+    assert_equal(
+      @conductor.thread_count,
+      thread_ids.uniq.size,
+      "performance must be spread across threads",
+    )
   end
 
   def test_exception_during_multithreading

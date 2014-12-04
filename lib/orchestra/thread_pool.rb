@@ -136,6 +136,7 @@ module Orchestra
       Thread.current.abort_on_exception = false
       until (job = queue.pop) == :terminate
         job.perform
+        Thread.pass
       end
     rescue => error
       add_thread!
