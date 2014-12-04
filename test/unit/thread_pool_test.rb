@@ -29,19 +29,22 @@ class ThreadPoolTest < Minitest::Test
   end
 
   def test_adjusting_thread_count_is_robust
-    iterate = lambda { |delta|
+    iterate = lambda { |delta, idx|
       old_count = @thread_pool.count
       new_count = old_count + delta
-      expected_status = ['sleep'] * new_count
       @thread_pool.count = new_count
-      assert_equal expected_status, @thread_pool.status, "going from #{old_count} ⇒ #{new_count}"
+      assert_equal(
+        new_count,
+        @thread_pool.count,
+        "going from #{old_count} ⇒ #{new_count}; size is #{@thread_pool.count}, idx=#{idx}",
+      )
     }
 
-    # Add @iterations times
-    @iterations.times do iterate.call 1 end
-
-    # Remove @iterations times
-    @iterations.times do iterate.call -1 end
+    # Add/remove @iteration times
+    @iterations.times do |idx|
+      iterate.call  1, idx
+      iterate.call -1, idx
+    end
   end
 
   def test_performing_work
@@ -79,7 +82,7 @@ class ThreadPoolTest < Minitest::Test
       end
     end
 
-    assert_equal ['sleep'] * old_thread_count, @thread_pool.status
+    assert_equal old_thread_count, @thread_pool.count
   end
 
   def test_observing_jobs

@@ -77,10 +77,10 @@ module Orchestra
     private
 
     def add_thread!
-      wait_for_thread_count_to_change do
-        thr = Thread.new &method(:thread_loop)
-        @threads << thr
-      end
+      old_count = queue.num_waiting
+      thr = Thread.new &method(:thread_loop)
+      Thread.pass while thr.status == 'run'
+      @threads << thr
       true
     end
 
@@ -107,13 +107,6 @@ module Orchestra
       job.set_error error
     ensure
       @dying << Thread.current
-    end
-
-    def wait_for_thread_count_to_change
-      old_count = queue.num_waiting
-      yield
-    ensure
-      Thread.pass while queue.num_waiting == old_count
     end
 
     def while_locked &block
