@@ -15,7 +15,7 @@ module Orchestra
     def initialize args = {}
       @timeout, _ = Util.extract_key_args args, :timeout_ms => 1000
       @threads = Set.new
-      @dead_pool = Set.new
+      @dying = Queue.new
       @pool_lock = Mutex.new
       @queue = Queue.new
       @jobs = {}
@@ -70,7 +70,8 @@ module Orchestra
     end
 
     def update event, *;
-      reap_dead_pool if event == :failed
+      return unless event == :failed
+      reap_thread
     end
 
     private
@@ -83,15 +84,16 @@ module Orchestra
       true
     end
 
-    def reap_dead_pool
-      @dead_pool.each &:join
-      @dead_pool.clear
+    def remove_thread!
+      queue << :terminate
+      reap_thread
+      true
     end
 
-    def remove_thread!
-      wait_for_thread_count_to_change do queue << :terminate end
-      sleep Rational(1, 10000) # FIXME
-      true
+    def reap_thread
+      thread = @dying.pop
+      @threads.delete thread
+      thread.join
     end
 
     class Job
@@ -142,8 +144,7 @@ module Orchestra
       add_thread!
       job.set_error error
     ensure
-      @threads.delete Thread.current
-      @dead_pool << Thread.current
+      @dying << Thread.current
     end
 
     def wait_for_thread_count_to_change
