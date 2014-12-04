@@ -73,10 +73,6 @@ module Orchestra
       reap_dead_pool if event == :failed
     end
 
-    def with_timeout &block
-      Timeout.timeout Rational(timeout, 1000), &block
-    end
-
     private
 
     def add_thread!
@@ -157,7 +153,7 @@ module Orchestra
     end
 
     def while_locked &block
-      @pool_lock.synchronize do with_timeout &block end
+      @pool_lock.synchronize &block
     end
   end
 end
