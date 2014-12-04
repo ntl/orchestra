@@ -96,6 +96,30 @@ module Orchestra
       thread.join
     end
 
+    def thread_loop
+      Thread.current.abort_on_exception = false
+      until (job = queue.pop) == :terminate
+        job.perform
+        Thread.pass
+      end
+    rescue => error
+      add_thread!
+      job.set_error error
+    ensure
+      @dying << Thread.current
+    end
+
+    def wait_for_thread_count_to_change
+      old_count = queue.num_waiting
+      yield
+    ensure
+      Thread.pass while queue.num_waiting == old_count
+    end
+
+    def while_locked &block
+      @pool_lock.synchronize &block
+    end
+
     class Job
       include Observable
 
@@ -134,28 +158,5 @@ module Orchestra
       Failed = Module.new
     end
 
-    def thread_loop
-      Thread.current.abort_on_exception = false
-      until (job = queue.pop) == :terminate
-        job.perform
-        Thread.pass
-      end
-    rescue => error
-      add_thread!
-      job.set_error error
-    ensure
-      @dying << Thread.current
-    end
-
-    def wait_for_thread_count_to_change
-      old_count = queue.num_waiting
-      yield
-    ensure
-      Thread.pass while queue.num_waiting == old_count
-    end
-
-    def while_locked &block
-      @pool_lock.synchronize &block
-    end
   end
 end
