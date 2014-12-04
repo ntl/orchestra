@@ -28,7 +28,7 @@ module Orchestra
       end
 
       def build_context state
-        ExecutionContext.new self, state
+        ObjectContext.new self, state
       end
 
       def collection?
@@ -115,7 +115,7 @@ module Orchestra
       end
     end
 
-    class ExecutionContext
+    class ObjectContext
       def initialize adapter, state
         @__adapter__ = adapter
         @__state__ = state

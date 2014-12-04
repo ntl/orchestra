@@ -78,7 +78,7 @@ module Orchestra
       end
 
       def build_execution_context_class
-        context = Class.new ExecutionContext
+        context = Class.new InlineContext
         context.class_exec dependencies, collection do |deps, collection|
           deps.each do |dep| define_dependency dep end
           alias_method :fetch_collection, collection if collection
@@ -103,7 +103,7 @@ module Orchestra
         defaults.keys
       end
 
-      class ExecutionContext
+      class InlineContext
         def self.define_dependency dep
           define_method dep do
             ivar = "@#{dep}"
