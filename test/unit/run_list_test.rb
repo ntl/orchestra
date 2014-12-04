@@ -4,16 +4,16 @@ class RunListTest < Minitest::Test
 
     run_list = builder.build
 
-    assert_equal %w(foo⇒bar bar⇒baz baz⇒qux qux⇒res), run_list.node_names
+    assert_equal %w(foo⇒bar bar⇒baz baz⇒qux qux⇒res), run_list.step_names
     assert_includes run_list.dependencies, :foo
   end
 
-  def test_discards_unnecessary_nodes
+  def test_discards_unnecessary_steps
     builder['aba⇒cab'] = OpenStruct.new :required_dependencies => [:aba], :optional_dependencies => [], :provisions => [:cab]
 
     run_list = builder.build
 
-    assert_equal %w(foo⇒bar bar⇒baz baz⇒qux qux⇒res), run_list.node_names
+    assert_equal %w(foo⇒bar bar⇒baz baz⇒qux qux⇒res), run_list.step_names
   end
 
   def test_supplying_dependencies
@@ -21,16 +21,16 @@ class RunListTest < Minitest::Test
 
     run_list = builder.build
 
-    assert_equal %w(baz⇒qux qux⇒res), run_list.node_names
+    assert_equal %w(baz⇒qux qux⇒res), run_list.step_names
     refute_includes run_list.dependencies, :foo
   end
 
-  def test_nodes_that_modify
-    assemble_builder modifying_nodes
+  def test_steps_that_modify
+    assemble_builder modifying_steps
 
     run_list = builder.build
 
-    assert_equal %w(foo bar baz), run_list.node_names
+    assert_equal %w(foo bar baz), run_list.step_names
   end
 
   def test_reorders_optional_deps_before_mandatory_deps_when_possible
@@ -38,7 +38,7 @@ class RunListTest < Minitest::Test
 
     run_list = builder.build
 
-    assert_equal %w(baz+foo bar+baz foo+bar final), run_list.node_names
+    assert_equal %w(baz+foo bar+baz foo+bar final), run_list.step_names
     assert_equal [], run_list.required_dependencies
     assert_equal [:bar, :baz, :foo], run_list.optional_dependencies
   end
@@ -58,16 +58,16 @@ class RunListTest < Minitest::Test
 
   private
 
-  def assemble_builder nodes = default_nodes
+  def assemble_builder steps = default_steps
     @builder ||= begin
       builder = Orchestra::RunList::Builder.new :res
-      builder.merge! nodes
+      builder.merge! steps
       builder
     end
   end
   alias_method :builder, :assemble_builder
 
-  def default_nodes
+  def default_steps
     {
       'foo⇒bar' => OpenStruct.new(:required_dependencies => [:foo], :provisions => [:bar], optional_dependencies: []),
       'bar⇒baz' => OpenStruct.new(:required_dependencies => [:bar], :provisions => [:baz], optional_dependencies: []),
@@ -76,7 +76,7 @@ class RunListTest < Minitest::Test
     }
   end
 
-  def modifying_nodes
+  def modifying_steps
     {
       'foo' => OpenStruct.new(:required_dependencies => [:shared], :provisions => [:shared], optional_dependencies: []),
       'bar' => OpenStruct.new(:required_dependencies => [:shared], :provisions => [:shared], optional_dependencies: []),

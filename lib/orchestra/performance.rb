@@ -3,7 +3,7 @@ module Orchestra
     include Observable
     extend Forwardable
 
-    def_delegators :@run_list, :node_names, :provisions, :dependencies,
+    def_delegators :@run_list, :provisions, :dependencies,
       :optional_dependencies, :required_dependencies
 
     attr :conductor, :input, :state, :registry, :run_list
@@ -18,22 +18,22 @@ module Orchestra
 
     def perform
       ensure_inputs_are_present!
-      run_list.each do |name, node| process name, node end
+      run_list.each do |name, step| process name, step end
     rescue => error
       publish :error_raised, error
       raise error
     end
 
-    def process name, node
-      input = input_for node
-      publish :node_entered, name, input
-      output = perform_node node
-      publish :node_exited, name, output
+    def process name, step
+      input = input_for step
+      publish :step_entered, name, input
+      output = perform_step step
+      publish :step_exited, name, output
       state.merge! output
     end
 
-    def perform_node node
-      Movement.perform node, self
+    def perform_step step
+      Movement.perform step, self
     end
 
     def ensure_inputs_are_present!
@@ -42,9 +42,9 @@ module Orchestra
       raise MissingInputError.new missing_input unless missing_input.empty?
     end
 
-    def input_for node
+    def input_for step
       state.reject do |key, val|
-        registry[key] == val or not node.dependencies.include? key
+        registry[key] == val or not step.dependencies.include? key
       end
     end
 
@@ -62,20 +62,20 @@ module Orchestra
     end
 
     class Movement
-      def self.perform node, *args
-        if node.is_a? Operation
+      def self.perform step, *args
+        if step.is_a? Operation
           klass = EmbeddedOperation
         else
-          klass = node.collection ? CollectionMovement : self
+          klass = step.collection ? CollectionMovement : self
         end
-        instance = klass.new node, *args
-        node.process instance.perform
+        instance = klass.new step, *args
+        step.process instance.perform
       end
 
-      attr :context, :node, :performance
+      attr :context, :step, :performance
 
-      def initialize node, performance
-        @node = node
+      def initialize step, performance
+        @step = step
         @performance = performance
         @context = build_context performance
       end
@@ -85,7 +85,7 @@ module Orchestra
       end
 
       def build_context performance
-        node.build_context performance.state
+        step.build_context performance.state
       end
     end
 
@@ -120,13 +120,13 @@ module Orchestra
     class EmbeddedOperation < Movement
       def perform
         super
-        context.state.select do |k,_| k == node.result end
+        context.state.select do |k,_| k == step.result end
       end
 
       def build_context performance
         conductor = performance.registry[:conductor]
         copy_observers = conductor.method :copy_observers
-        node.start_performance conductor, input, &copy_observers
+        step.start_performance conductor, input, &copy_observers
       end
 
       def input

@@ -1,25 +1,25 @@
 module Orchestra
-  class Node
+  class Step
     class Output
-      attr :hsh, :node, :raw
+      attr :hsh, :step, :raw
 
-      def self.process node, raw
-        instance = new node, raw
+      def self.process step, raw
+        instance = new step, raw
         instance.massage
         instance.hsh
       end
 
-      def initialize node, raw
-        @node = node
+      def initialize step, raw
+        @step = step
         @raw = raw
       end
 
       def provisions
-        node.provisions
+        step.provisions
       end
 
       def collection?
-        node.collection?
+        step.collection?
       end
 
       def massage

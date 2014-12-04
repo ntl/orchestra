@@ -1,6 +1,6 @@
 module Examples
   FizzBuzz = Orchestra::Operation.new do
-    node :make_array do
+    step :make_array do
       depends_on :up_to
       provides :array
       perform do
@@ -8,7 +8,7 @@ module Examples
       end
     end
 
-    node :apply_fizzbuzz do
+    step :apply_fizzbuzz do
       iterates_over :array
       provides :fizzbuzz
       perform do |num|

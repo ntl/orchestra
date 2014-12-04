@@ -1,7 +1,5 @@
 module Orchestra
-  class Node
-    autoload :Output, "orchestra/node/output"
-
+  class Step
     attr :collection, :dependencies, :provisions
 
     def initialize args = {}
@@ -36,7 +34,7 @@ module Orchestra
       Output.process self, raw_output
     end
 
-    class DelegateNode < Node
+    class ObjectStep < Step
       attr :adapter
 
       def initialize adapter, args = {}
@@ -53,11 +51,11 @@ module Orchestra
       end
     end
 
-    class InlineNode < Node
+    class InlineStep < Step
       def self.build &block
-        builder = DSL::Nodes::Builder.new
-        DSL::Nodes::Context.evaluate builder, &block
-        builder.build_node
+        builder = DSL::Steps::Builder.new
+        DSL::Steps::Context.evaluate builder, &block
+        builder.build_step
       end
 
       attr :context_class, :defaults, :perform_block
@@ -73,7 +71,7 @@ module Orchestra
 
       def validate!
         unless perform_block
-          raise ArgumentError, "expected inline node to define a perform block"
+          raise ArgumentError, "expected inline step to define a perform block"
         end
       end
 

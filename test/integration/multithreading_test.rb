@@ -3,7 +3,7 @@ class MultithreadingTest < Minitest::Test
 
   def setup
     @operation = Orchestra::Operation.new do
-      node :map_thread_ids do
+      step :map_thread_ids do
         iterates_over :list
         provides :thread_ids
         perform do |item|

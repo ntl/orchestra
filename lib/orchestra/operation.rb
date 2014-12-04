@@ -12,15 +12,15 @@ module Orchestra
 
     extend Forwardable
 
-    def_delegators :@default_run_list, :node_names, :provisions, :dependencies,
+    def_delegators :@default_run_list, :provisions, :dependencies,
       :optional_dependencies, :required_dependencies
 
-    attr :registry, :result, :nodes
+    attr :registry, :result, :steps
 
     def initialize args = {}
-      @result, @command, @nodes = Util.extract_key_args args,
-        :result, :command => false, :nodes => {}
-      @default_run_list = RunList.build nodes, result, []
+      @result, @command, @steps = Util.extract_key_args args,
+        :result, :command => false, :steps => {}
+      @default_run_list = RunList.build steps, result, []
     end
 
     def process output
@@ -29,7 +29,7 @@ module Orchestra
 
     def start_performance *args
       conductor, input = extract_args args
-      run_list = RunList.build nodes, result, input.keys
+      run_list = RunList.build steps, result, input.keys
       performance = Performance.new conductor, run_list, input
       yield performance if block_given?
       performance.publish :operation_entered, name, input

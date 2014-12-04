@@ -8,7 +8,7 @@ Here's a simple example without a lot of context:
 
 ```ruby
 operation = Orchestra::Operation.new do
-  node :make_array do
+  step :make_array do
     depends_on :up_to
     provides :array
     perform do
@@ -16,7 +16,7 @@ operation = Orchestra::Operation.new do
     end
   end
 
-  node :apply_fizzbuzz do
+  step :apply_fizzbuzz do
     iterates_over :array
     provides :fizzbuzz
     perform do |num|
@@ -139,7 +139,7 @@ InvitationService = Orchestra::Operation.new do
   DEFAULT_MESSAGE = "I would really love for you to try out MyApp."
   ROBOT_FOLLOWER_THRESHHOLD = 500
 
-  node :fetch_followers do
+  step :fetch_followers do
     depends_on :account_name
     provides :followers
     perform do
@@ -147,14 +147,14 @@ InvitationService = Orchestra::Operation.new do
     end
   end
 
-  node :fetch_blacklist do
+  step :fetch_blacklist do
     provides :blacklist
     perform do
       Blacklist.pluck :flutter_account_name
     end
   end
 
-  node :remove_blacklisted_followers do
+  step :remove_blacklisted_followers do
     depends_on :blacklist
     modifies :followers
     perform do
@@ -165,7 +165,7 @@ InvitationService = Orchestra::Operation.new do
     end
   end
 
-  node :filter_robots do
+  step :filter_robots do
     modifies :followers, :collection => true
     perform do |follower|
       account_name = follower.fetch 'username'
@@ -198,12 +198,12 @@ Orchestra.perform InvitationService, :account_name => 'realntl', :message => 'Sa
 
 There's a lot more to learn, but let's start by building an understanding of the DSL.
 
-## Breaking down the DSL: Nodes
+## Breaking down the DSL: Steps
 
-An *operation* is a collection of nodes that each individually take part in producing some larger behavior. Each node represents one step, or stage, in the whole process. A node, essentially, accepts input, processes, and provides output. Let's look at the first node, called `:fetch_followers`.
+An *operation* is a collection of steps that each individually take part in producing some larger behavior. A step, essentially, accepts input, processes, and provides output. Let's look at the first one, called `:fetch_followers`.
 
 ```ruby
-node :fetch_followers do
+step :fetch_followers do
   depends_on :account_name
   provides :followers
   perform do
@@ -212,7 +212,7 @@ node :fetch_followers do
 end
 ```
 
-This node depends on something called an `account_name`. This means you must supply `:account_name` when you perform the operation, otherwise, `:fetch_followers` won't work. `orchestra` ensures that your performance can't commence without the required input:
+This step depends on something called an `account_name`. This means you must supply `:account_name` when you perform the operation, otherwise, `:fetch_followers` won't work. `orchestra` ensures that your performance can't commence without the required input:
 
 ```ruby
 # Raises Orchestra::MissingInputError: Missing input :account_name
@@ -223,7 +223,7 @@ operation.perform :account_name => 'realntl'
 
 Dependencies can be optional. In the above example, `deliver_emails` defaults the `:message` input to `DEFAULT_MESSAGE`.
 
-Often, you will need the output of one operation to feed into the input of another. The annotations `depends_on`, `iterates_over`, and `modifies` all describe the inputs, and `provides` describes the output. When `provides` is omitted, the name of the output is set to match the name of the node. Orchestra actually uses the annotations to sort the ordering of the nodes at runtime to ensure that all dependencies are satisfied. In the above example, `remove_blacklisted_followers` would not execute before `fetch_blacklist`, no matter where their definitions were placed within the operation. Orchestra detects that `remove_blacklisted_followers` *depends on* `blacklist`, and `fetch_blacklist` actually provides a `blacklist`, so it knows to run `fetch_blacklist` before `remove_blacklisted_followers`. Similarly, if you had your own list of blacklisted account names lying around, you could bypass the `fetch_blacklist` node altogether, since there is no sense fetching a `blacklist` when you've already got one:
+Often, you will need the output of one operation to feed into the input of another. The annotations `depends_on`, `iterates_over`, and `modifies` all describe the inputs, and `provides` describes the output. When `provides` is omitted, the name of the output is set to match the name of the step. Orchestra actually uses the annotations to sort the ordering of the steps at runtime to ensure that all dependencies are satisfied. In the above example, `remove_blacklisted_followers` would not execute before `fetch_blacklist`, no matter where their definitions were placed within the operation. Orchestra detects that `remove_blacklisted_followers` *depends on* `blacklist`, and `fetch_blacklist` actually provides a `blacklist`, so it knows to run `fetch_blacklist` before `remove_blacklisted_followers`. Similarly, if you had your own list of blacklisted account names lying around, you could bypass the `fetch_blacklist` step altogether, since there is no sense fetching a `blacklist` when you've already got one:
 
 ```ruby
 # Never invokes fetch_blacklist
@@ -232,10 +232,10 @@ operation.perform :account_name => 'realntl', :blacklist => %w(dhh unclebobmarti
 
 This allows your operations to be reused in cases where some of the dependencies can already be satisfied.
 
-Finally, the `modifies` annotiation deserves some explaining. When a node merely mutates an input, you are certainly welcome to declare distinct `depends_on` and `modifies` annotations:
+Finally, the `modifies` annotiation deserves some explaining. When a step merely mutates an input, you are certainly welcome to declare distinct `depends_on` and `modifies` annotations:
 
 ```ruby
-node :remove_blacklisted_followers do
+step :remove_blacklisted_followers do
   depends_on :blacklist, :followers
   provides :followers
 end
@@ -244,7 +244,7 @@ end
 However, `modifies` simply condenses the two into one. The following example is identical to the previous:
 
 ```ruby
-node :remove_blacklisted_followers do
+step :remove_blacklisted_followers do
   depends_on :blacklist
   modifies :followers
 end
@@ -252,15 +252,15 @@ end
 
 ## Breaking down the DSL: the operation itself
 
-Configuring the operation is rather simple. You define the various nodes, and then specify the result. There are three ways to specify the result.
+Configuring the operation is rather simple. You define the various steps, and then specify the result. There are three ways to specify the result.
 
 The first is very straightforward:
 
 ```ruby
 Orchestra::Operation.new do
-  node :foo do
+  step :foo do
     depends_on :bar
-    provides :foo # optional, since the node is called :foo
+    provides :foo # optional, since the step is called :foo
     perform do … end
   end
 
@@ -272,7 +272,7 @@ The second is just a shortened form of the first:
 
 ```ruby
 Orchestra::Operation.new do
-  # Define a node called :foo and make it the result
+  # Define a step called :foo and make it the result
   result :foo do
     depends_on :bar
     perform do … end
@@ -293,10 +293,10 @@ end
 
 ## Hooking in POROs
 
-You can also hook up POROs to operations as nodes. This is important both to manage complex nodes as well as leveraging existing objects in the system. The `filter_robots` node could be expressed as a PORO rather easily:
+You can also hook up POROs to operations as steps. This is important both to manage complex steps as well as leveraging existing objects in the system. The `filter_robots` step could be expressed as a PORO rather easily:
 
 ```ruby
-node FilterRobots, :iterates_over => :followers, :collection => true
+step FilterRobots, :iterates_over => :followers, :collection => true
 
 class FilterRobots
   def initialize followers
@@ -316,13 +316,13 @@ end
 Orchestra infers the dependencies from `FilterRobots#initialize`, and automatically instantiates the object for you during the performance. You can alter the name of the method:
 
 ```ruby
-node MyPoro, :method => :call
+step MyPoro, :method => :call
 ```
 
 You can also hook into singletons like `Module` (or a `Class` that implements `self.perform`):
 
 ```ruby
-node MySingleton, :method => :invoke
+step MySingleton, :method => :invoke
 
 module MySingleton
   def self.invoke … end
@@ -333,9 +333,9 @@ By default, the name of the provision will be inferred from the object name.
 
 ## Multithreading
 
-Two of the nodes in the `InvitationService` orchestration -- `filter_robots` and `deliver_emails` -- actually operate on *collections*. `deliver_emails` indicates that `:followers` is a collection by using the `iterates_over` annotation instead of `depends_on`. In fact, the two annotations are identical *except* that `iterates_over` indicates that the dependency is in fact going to be a list. Collections can be defined on a `modifies` annotation, as well, by supplying `:collection => true` as in the case of `filter_robots`.
+Two of the steps in the `InvitationService` orchestration -- `filter_robots` and `deliver_emails` -- actually operate on *collections*. `deliver_emails` indicates that `:followers` is a collection by using the `iterates_over` annotation instead of `depends_on`. In fact, the two annotations are identical *except* that `iterates_over` indicates that the dependency is in fact going to be a list. Collections can be defined on a `modifies` annotation, as well, by supplying `:collection => true` as in the case of `filter_robots`.
 
-When nodes iterate over collections, Orchestra invokes `perform do … end` block once for each item in the collection passed in. It also spreads out each invokation across a thread pool. By default, there is only one thread in the thread pool. You can reconfigure that globally in an initializer of some kind:
+When steps iterate over collections, Orchestra invokes `perform do … end` block once for each item in the collection passed in. It also spreads out each invokation across a thread pool. By default, there is only one thread in the thread pool. You can reconfigure that globally in an initializer of some kind:
 
 ```ruby
 Orchestra.configure do
@@ -364,7 +364,7 @@ conductor.thread_count = 5
 Second, we can inject *services* into our operation. Our operation needs to be modified such that our database connections and API access are passed in as dependencies:
 
 ```ruby
-node :fetch_followers do
+step :fetch_followers do
   depends_on :account_name, :flutter_api
   provides :followers
   perform do
@@ -374,7 +374,7 @@ end
 
 # and
 
-node :fetch_blacklist do
+step :fetch_blacklist do
   depends_on :blacklist_table
   provides :blacklist
   perform do
@@ -400,7 +400,7 @@ conductor.perform InvitationService, :account_name => 'realntl', :blacklist_tabl
 
 What did this buy us? Two big things. We can now attach *observers* to the performance, and we can actually record all calls in and out of the `flutter_api` and `blacklist_table` services. The former allows us to share the internal operation of the performance with the rest of the system without breaking encapsulation, and the latter allows us to actually replay the operation against recorded snapshots of live performances.
 
-Additionally, you can pass the `conductor` into nodes. In this way you can embed one orchestration into another:
+Additionally, you can pass the `conductor` into steps. In this way you can embed one operation inside another:
 
 ```ruby
 inner_operation = Orchestra::Operation.new do
@@ -455,8 +455,8 @@ class MyObserver
     case event_name
     when :operation_entered then "Hello"
     when :operation_exited then "World!"
-    when :node_entered then "Hello from within a node"
-    when :node_exited then "Goodbye from within a node"
+    when :step_entered then "Hello from within a step"
+    when :step_exited then "Goodbye from within a step"
     when :error_raised then "Ruh roh!"
     end
   end
@@ -469,8 +469,8 @@ The arguments passed to `update` will vary based on the event:
 | ------------------------ | ------------------------------------ | --------------------------------- |
 | `:operation_entered`     | The name of the operation starting   | Input going into the operation    |
 | `:operation_exited`      | The name of the operation finishing  | Output of the operation           |
-| `:node_entered`          | The name of the node                 | Input going into the node         |
-| `:node_exited`           | The name of the node                 | Output of the node                |
+| `:step_entered`          | The name of the step                 | Input going into the step         |
+| `:step_exited`           | The name of the step                 | Output of the step                |
 | `:error_raised`          | The error itself                     | `nil`                             |
 
 Embedded performances will inherit the observers of the outer operation.

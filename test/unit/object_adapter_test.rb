@@ -5,7 +5,7 @@ class ObjectAdapterTest < Minitest::Test
 
   def test_method_does_not_exist_on_singleton
     error = assert_raises NotImplementedError do
-      @builder.add_node Splitter, :provides => :words, :method => :foo
+      @builder.add_step Splitter, :provides => :words, :method => :foo
     end
 
     assert_equal "ObjectAdapterTest::Splitter does not implement method `foo'", error.message
@@ -13,25 +13,25 @@ class ObjectAdapterTest < Minitest::Test
 
   def test_method_does_not_exist_on_object
     error = assert_raises NotImplementedError do
-      @builder.add_node Upcaser, :provides => :words
+      @builder.add_step Upcaser, :provides => :words
     end
 
     assert_equal "ObjectAdapterTest::Upcaser does not implement instance method `perform'", error.message
   end
 
   def test_dependencies_inferred_from_method_defaults
-    node = @builder.add_node Upcaser, :iterates_over => :words, :provides => :upcased_words, :method => :call
+    step = @builder.add_step Upcaser, :iterates_over => :words, :provides => :upcased_words, :method => :call
 
-    assert_equal [:words, :transform], node.dependencies
-    assert_equal [:words], node.required_dependencies
+    assert_equal [:words, :transform], step.dependencies
+    assert_equal [:words], step.required_dependencies
   end
 
   def test_performing_an_operation_with_integrated_objects
     operation = Orchestra::Operation.new do
-      node Splitter, :provides => :words
-      node Upcaser, :iterates_over => :words, :provides => :upcased_words, :method => :call
-      node Bolder, :iterates_over => :upcased_words, :provides => :bolded_words, :method => :call
-      node Joiner, :method => :join
+      step Splitter, :provides => :words
+      step Upcaser, :iterates_over => :words, :provides => :upcased_words, :method => :call
+      step Bolder, :iterates_over => :upcased_words, :provides => :bolded_words, :method => :call
+      step Joiner, :method => :join
       self.result = :joiner
     end
 
@@ -50,7 +50,7 @@ class ObjectAdapterTest < Minitest::Test
   def test_provent_singleton_objects_from_handling_collections
     error = assert_raises ArgumentError do
       Orchestra::Operation.new do
-        node Splitter, :iterates_over => :sentence
+        step Splitter, :iterates_over => :sentence
       end
     end
 

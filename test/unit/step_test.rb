@@ -1,15 +1,15 @@
-class NodeTest < Minitest::Test
-  def test_performing_a_node
-    node = build_simple_node
+class StepTest < Minitest::Test
+  def test_invoking_a_step
+    step = build_simple_step
 
     assert_equal(
       { :bar => 4 },
-      node.perform(:foo => 2, :bar => 2),
+      step.perform(:foo => 2, :bar => 2),
     )
   end
 
   def test_providing_a_single_hash
-    node = Orchestra::Node::InlineNode.new(
+    step = Orchestra::Step::InlineStep.new(
       :dependencies => [:foo],
       :provides => [:bar],
       :perform_block => lambda { { :bar => (foo * 2) } },
@@ -17,12 +17,12 @@ class NodeTest < Minitest::Test
 
     assert_equal(
       { :bar => 4 },
-      node.perform(:foo => 2),
+      step.perform(:foo => 2),
     )
   end
 
   def test_providing_a_single_hash_that_is_not_the_output
-    node = Orchestra::Node::InlineNode.new(
+    step = Orchestra::Step::InlineStep.new(
       :dependencies => [:foo],
       :provides => [:bar],
       :perform_block => lambda { { :baz => (foo * 2) } },
@@ -30,12 +30,12 @@ class NodeTest < Minitest::Test
 
     assert_equal(
       { :bar => { :baz => 4 } },
-      node.perform(:foo => 2),
+      step.perform(:foo => 2),
     )
   end
 
-  def test_performing_a_collection_node
-    node = Orchestra::Node::InlineNode.new(
+  def test_invoking_a_collection_step
+    step = Orchestra::Step::InlineStep.new(
       :dependencies => [:foo],
       :provides => [:bar],
       :perform_block => lambda { |e| e * 2 },
@@ -44,38 +44,38 @@ class NodeTest < Minitest::Test
 
     assert_equal(
       { :bar => [2, 4, 6, 8] },
-      node.perform(:foo => [1, 2, 3, 4]),
+      step.perform(:foo => [1, 2, 3, 4]),
     )
   end
 
   def test_defaulting
-    node = build_simple_node
+    step = build_simple_step
 
     assert_equal(
       { :bar => 8 },
-      node.perform(:foo => 2),
+      step.perform(:foo => 2),
     )
   end
 
   def test_introspecting_dependencies
-    node = build_simple_node
+    step = build_simple_step
 
-    assert_equal [:foo, :bar], node.dependencies
+    assert_equal [:foo, :bar], step.dependencies
   end
 
   def test_introspecting_mandatory_dependencies
-    node = build_simple_node
+    step = build_simple_step
 
-    assert_equal [:foo], node.required_dependencies
+    assert_equal [:foo], step.required_dependencies
   end
 
-  def test_node_fails_to_supply_provisions
-    node = Orchestra::Node::InlineNode.new(
+  def test_step_fails_to_supply_provisions
+    step = Orchestra::Step::InlineStep.new(
       :provides => [:foo, :bar, :baz],
       :perform_block => lambda { nil },
     )
 
-    error = assert_raises Orchestra::MissingProvisionError do node.perform end
+    error = assert_raises Orchestra::MissingProvisionError do step.perform end
 
     assert_equal(
       "failed to supply output: :foo, :bar and :baz",
@@ -84,12 +84,12 @@ class NodeTest < Minitest::Test
   end
 
   def test_cannot_return_nil
-    node = Orchestra::Node::InlineNode.new(
+    step = Orchestra::Step::InlineStep.new(
       :provides => [:foo],
       :perform_block => lambda do nil end
     )
 
-    error = assert_raises Orchestra::MissingProvisionError do node.perform end
+    error = assert_raises Orchestra::MissingProvisionError do step.perform end
 
     assert_equal(
       "failed to supply output: :foo",
@@ -97,22 +97,22 @@ class NodeTest < Minitest::Test
     )
   end
 
-  def test_node_provides_extra_provisions
-    node = Orchestra::Node::InlineNode.new(
+  def test_step_provides_extra_provisions
+    step = Orchestra::Step::InlineStep.new(
       :provides => [:foo],
       :perform_block => lambda do { :foo => :bar, :baz => :qux } end,
     )
 
     assert_equal(
       { :foo => :bar },
-      node.perform,
+      step.perform,
     )
   end
 
   private
 
-  def build_simple_node
-     Orchestra::Node::InlineNode.new(
+  def build_simple_step
+     Orchestra::Step::InlineStep.new(
       :defaults => { :bar => lambda { 4 } },
       :dependencies => [:foo, :bar],
       :provides => [:bar],

@@ -40,29 +40,29 @@ module OperationTest
       )
     end
 
-    def test_passing_conductor_into_nodes
+    def test_passing_conductor_into_steps
       conductor = Orchestra::Conductor.new
 
-      node = Orchestra::Node::InlineNode.build do
+      step = Orchestra::Step::InlineStep.build do
         depends_on :conductor
         provides :conductor_id
         perform do conductor.object_id end
       end
 
-      assert_equal conductor.object_id, node.perform[:conductor_id]
+      assert_equal conductor.object_id, step.perform[:conductor_id]
     end
 
     def test_missing_input_errors
       operation = Orchestra::Operation.new do
-        node :foo do
+        step :foo do
           depends_on :bar
           perform do bar + bar end
         end
-        node :baz do
+        step :baz do
           depends_on :qux
           perform do qux * qux end
         end
-        node :result do
+        step :result do
           depends_on :foo, :baz
           perform do baz - foo end
         end
@@ -80,19 +80,19 @@ module OperationTest
 
     def build_simple_operation
       Orchestra::Operation.new do
-        node :split do
+        step :split do
           depends_on :sentence
           provides :word_list
           perform do sentence.split %r{[[:space:]]+} end
         end
 
-        node :upcase do
+        step :upcase do
           depends_on :word_list
           provides :upcased_word_list
           perform do word_list.map &:upcase end
         end
 
-        node :join do
+        step :join do
           depends_on :upcased_word_list
           perform do upcased_word_list.join ' ' end
         end
@@ -103,19 +103,19 @@ module OperationTest
 
     def build_mutator
       Orchestra::Operation.new do
-        node :carrots do
+        step :carrots do
           depends_on :shopping_list
           provides :shopping_list
           perform do shopping_list << "2 bunches of carrots" end
         end
 
-        node :celery do
+        step :celery do
           depends_on :shopping_list
           provides :shopping_list
           perform do shopping_list << "1 stalk of celery" end
         end
 
-        node :onions do
+        step :onions do
           depends_on :shopping_list
           provides :shopping_list
           perform do shopping_list << "3 yellow onions" end
@@ -129,33 +129,33 @@ module OperationTest
 
   class IntrospectionTest < Minitest::Test
     def test_introspecting_dependencies
-      node = Orchestra::Node::InlineNode.build do
+      step = Orchestra::Step::InlineStep.build do
         depends_on :foo, :bar => :baz
         provides :baz
         perform do :noop end
       end
 
-      assert_equal [:foo, :bar], node.dependencies
+      assert_equal [:foo, :bar], step.dependencies
     end
 
     def test_introspecting_optional_dependencies
-      node = Orchestra::Node::InlineNode.build do
+      step = Orchestra::Step::InlineStep.build do
         depends_on :foo, :bar => :baz
         provides :qux
         perform do :noop end
       end
 
-      assert_equal [:bar], node.optional_dependencies
+      assert_equal [:bar], step.optional_dependencies
     end
 
     def test_introspecting_mandatory_dependencies
-      node = Orchestra::Node::InlineNode.build do
+      step = Orchestra::Step::InlineStep.build do
         depends_on :foo, :bar => :baz
         provides :baz
         perform do :noop end
       end
 
-      assert_equal [:foo], node.required_dependencies
+      assert_equal [:foo], step.required_dependencies
     end
 
   end
@@ -163,7 +163,7 @@ module OperationTest
   class EmbeddingOperationsTest < Minitest::Test
     def test_embedding_operations
       inner = Orchestra::Operation.new do
-        node :double do
+        step :double do
           depends_on :number
           provides :doubled
           perform do number * 2 end
@@ -176,7 +176,7 @@ module OperationTest
       end
 
       outer = Orchestra::Operation.new do
-        node inner
+        step inner
 
         result :squared do
           depends_on :plus_one
@@ -216,7 +216,7 @@ module OperationTest
           },
         },
         :output => 81,
-        :performance_name => nil,
+        :operation_name => nil,
         :service_calls => [],
       }
     end

@@ -1,12 +1,12 @@
 module Orchestra
   module DSL
     class ObjectAdapter
-      def self.build_node object, args = {}
+      def self.build_step object, args = {}
         method_name = args.delete :method do :perform end
         collection = args.delete :iterates_over
         adapter_type = determine_type object, method_name
         adapter = adapter_type.new object, method_name, collection
-        NodeFactory.build adapter, args
+        StepFactory.build adapter, args
       end
 
       def self.determine_type object, method_name
@@ -36,7 +36,7 @@ module Orchestra
       end
 
       def context_class
-        @context_class ||= Node.build_execution_context_class dependencies
+        @context_class ||= Step.build_execution_context_class dependencies
       end
 
       def dependencies
@@ -86,10 +86,10 @@ module Orchestra
       end
     end
 
-    class NodeFactory
+    class StepFactory
       def self.build *args
         instance = new *args
-        instance.build_node
+        instance.build_step
       end
 
       attr :adapter, :compact, :provides, :thread_count
@@ -100,12 +100,12 @@ module Orchestra
           :provides => nil, :compact => false, :thread_count => nil
       end
 
-      def build_node
+      def build_step
         adapter.validate!
-        Node::DelegateNode.new adapter, build_node_args
+        Step::ObjectStep.new adapter, build_step_args
       end
 
-      def build_node_args
+      def build_step_args
         hsh = {
           :dependencies => adapter.dependencies,
           :provides     => Array(provides),

@@ -1,6 +1,6 @@
 module Orchestra
   module DSL
-    module Nodes
+    module Steps
       class Builder
         attr_accessor :collection, :perform_block
 
@@ -12,8 +12,8 @@ module Orchestra
           @provisions = []
         end
 
-        def build_node
-          Node::InlineNode.new(
+        def build_step
+          Step::InlineStep.new(
             :collection    => collection,
             :defaults      => defaults,
             :dependencies  => dependencies,

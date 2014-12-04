@@ -3,7 +3,7 @@ module Examples
     DEFAULT_MESSAGE = "I would really love for you to try out MyApp."
     ROBOT_FOLLOWER_THRESHHOLD = 500
 
-    node :fetch_followers do
+    step :fetch_followers do
       depends_on :account_name, :http
       provides :followers
       perform do
@@ -12,7 +12,7 @@ module Examples
       end
     end
 
-    node :fetch_blacklist do
+    step :fetch_blacklist do
       depends_on :db
       provides :blacklist
       perform do
@@ -21,7 +21,7 @@ module Examples
       end
     end
 
-    node :remove_blacklisted_followers do
+    step :remove_blacklisted_followers do
       depends_on :blacklist
       modifies :followers
       perform do
@@ -32,7 +32,7 @@ module Examples
       end
     end
 
-    node :filter_robots do
+    step :filter_robots do
       depends_on :http
       modifies :followers, :collection => true
       perform do |follower|
