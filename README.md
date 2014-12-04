@@ -1,4 +1,4 @@
-# Orchestra
+# Orchestra ![Travis CI](https://travis-ci.org/ntl/orchestra.svg?branch=master)
 
 Seamlessly chain multiple command or query objects together with a simple, lightweight framework.
 
