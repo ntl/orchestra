@@ -48,6 +48,6 @@ class ReplayableOperationTest < Minitest::Test
 
     db.close
 
-    recording.to_h
+    recording
   end
 end

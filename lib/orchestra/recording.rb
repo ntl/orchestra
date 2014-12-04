@@ -27,6 +27,10 @@ module Orchestra
       }
     end
 
+    def to_json generator
+      generator.generate to_h
+    end
+
     def self.replay operation, input, service_recordings
       replayed_services = {}
       service_recordings.each do |svc, service_recording|
