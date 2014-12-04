@@ -35,13 +35,13 @@ class ReplayableOperationTest < Minitest::Test
     stub_followers_request
     stub_accounts_requests
 
-    conductor = Orchestra::Conductor.new(
+    invoker = Orchestra::Invoker.new(
       :db   => db,
       :http => Net::HTTP,
       :smtp => mock_smtp,
     )
 
-    recording = conductor.record(
+    recording = invoker.record(
       Examples::InvitationService,
       :account_name => 'realntl',
     )

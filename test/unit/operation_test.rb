@@ -40,16 +40,16 @@ module OperationTest
       )
     end
 
-    def test_passing_conductor_into_steps
-      conductor = Orchestra::Conductor.new
+    def test_passing_invoker_into_steps
+      invoker = Orchestra::Invoker.new
 
       step = Orchestra::Step::InlineStep.build do
-        depends_on :conductor
-        provides :conductor_id
-        execute do conductor.object_id end
+        depends_on :invoker
+        provides :invoker_id
+        execute do invoker.object_id end
       end
 
-      assert_equal conductor.object_id, step.execute[:conductor_id]
+      assert_equal invoker.object_id, step.execute[:invoker_id]
     end
 
     def test_missing_input_errors
@@ -186,10 +186,10 @@ module OperationTest
 
       telemetry = {}
 
-      conductor = Orchestra::Conductor.new
-      conductor.add_observer TelemetryRecorder.new telemetry
+      invoker = Orchestra::Invoker.new
+      invoker.add_observer TelemetryRecorder.new telemetry
 
-      result = conductor.execute outer, :number => 4
+      result = invoker.invoke outer, :number => 4
 
       assert_equal 81, result
 

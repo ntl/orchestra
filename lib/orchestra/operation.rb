@@ -28,9 +28,9 @@ module Orchestra
     end
 
     def start_execution *args
-      conductor, input = extract_args args
+      invoker, input = extract_args args
       run_list = RunList.build steps, result, input.keys
-      execution = Execution.start_operation conductor, run_list, input
+      execution = Execution.start_operation invoker, run_list, input
       yield execution if block_given?
       execution.publish :operation_entered, name, input
       execution
@@ -51,9 +51,9 @@ module Orchestra
     private
 
     def extract_args args
-      conductor = args.size > 1 ? args.shift : Conductor.new
+      invoker = args.size > 1 ? args.shift : Invoker.new
       input = args.fetch 0 do {} end
-      [conductor, input]
+      [invoker, input]
     end
   end
 end

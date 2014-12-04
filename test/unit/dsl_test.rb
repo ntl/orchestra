@@ -77,10 +77,10 @@ class DSLTest < Minitest::Test
       end
     end
 
-    conductor = Orchestra::Conductor.new
-    conductor.add_observer test_observer
+    invoker = Orchestra::Invoker.new
+    invoker.add_observer test_observer
 
-    assert_equal nil, conductor.execute(operation, :baz => 3)
+    assert_equal nil, invoker.invoke(operation, :baz => 3)
     assert_equal 8,   test_observer.result
   end
 

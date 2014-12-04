@@ -11,7 +11,7 @@ module Orchestra
   end
 
   def execute operation, inputs = {}
-    Conductor.new.execute operation, inputs
+    Invoker.new.invoke operation, inputs
   end
 
   def replay_recording operation, store, input = {}

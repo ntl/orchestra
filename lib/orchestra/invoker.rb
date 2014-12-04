@@ -1,5 +1,5 @@
 module Orchestra
-  class Conductor
+  class Invoker
     attr :observers, :services, :thread_pool
 
     def initialize services = {}
@@ -9,7 +9,7 @@ module Orchestra
       self.thread_count = Configuration.thread_count
     end
 
-    def execute operation, input = {}
+    def invoke operation, input = {}
       operation.execute self, input do |execution|
         copy_observers execution
         yield execution if block_given?
@@ -19,7 +19,7 @@ module Orchestra
     def record *args
       recording = Recording.new
       add_observer recording
-      execute *args do |execution|
+      invoke *args do |execution|
         execution.add_observer recording
       end
       recording
@@ -41,7 +41,7 @@ module Orchestra
     end
 
     def build_registry observable
-      hsh = { :conductor => self }
+      hsh = { :invoker => self }
       services.each_with_object hsh do |(service_name, _), hsh|
         service = resolve_service observable, service_name
         hsh[service_name] = service if service

@@ -15,17 +15,17 @@ class MultithreadingTest < Minitest::Test
       self.result = :thread_ids
     end
 
-    @conductor = Orchestra::Conductor.new
-    @conductor.thread_count = 5
+    @invoker = Orchestra::Invoker.new
+    @invoker.thread_count = 5
   end
 
   def test_multithreading
     list = (1..1000).to_a
 
-    thread_ids = @conductor.execute @operation, :list => list
+    thread_ids = @invoker.invoke @operation, :list => list
 
     assert_equal(
-      @conductor.thread_count,
+      @invoker.thread_count,
       thread_ids.uniq.size,
       "execution must be spread across threads",
     )
@@ -36,7 +36,7 @@ class MultithreadingTest < Minitest::Test
     list[23] = :blow_up
 
     assert_raises CustomError do
-      @conductor.execute @operation, :list => list
+      @invoker.invoke @operation, :list => list
     end
   end
 end

@@ -7,7 +7,7 @@ module Orchestra
     end
 
     def execute_step step, input
-      operation_execution = Operation.new Conductor.new, {}, input
+      operation_execution = Operation.new Invoker.new, {}, input
       Step.execute step, 'anonymous', operation_execution
     end
 
@@ -18,13 +18,13 @@ module Orchestra
       def_delegators :@run_list, :provisions, :dependencies,
         :optional_dependencies, :required_dependencies
 
-      attr :conductor, :input, :state, :registry, :run_list
+      attr :invoker, :input, :state, :registry, :run_list
 
-      def initialize conductor, run_list, input
-        @conductor = conductor
+      def initialize invoker, run_list, input
+        @invoker = invoker
         @input = input.dup
         @run_list = run_list
-        @registry = conductor.build_registry self
+        @registry = invoker.build_registry self
         @state = registry.merge input
       end
 
@@ -57,7 +57,7 @@ module Orchestra
       end
 
       def thread_pool
-        conductor.thread_pool
+        invoker.thread_pool
       end
     end
 
@@ -145,9 +145,9 @@ module Orchestra
       end
 
       def build_context
-        conductor = operation_execution.registry[:conductor]
-        copy_observers = conductor.method :copy_observers
-        step.start_execution conductor, input, &copy_observers
+        invoker = operation_execution.registry[:invoker]
+        copy_observers = invoker.method :copy_observers
+        step.start_execution invoker, input, &copy_observers
       end
 
       def input

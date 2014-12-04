@@ -36,8 +36,8 @@ module Orchestra
       service_recordings.each do |svc, service_recording|
         replayed_services[svc] = Playback.build service_recording
       end
-      conductor = Conductor.new replayed_services
-      conductor.execute operation, input
+      invoker = Invoker.new replayed_services
+      invoker.invoke operation, input
     end
   end
 end

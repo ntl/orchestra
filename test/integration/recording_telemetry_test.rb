@@ -74,10 +74,10 @@ class RecordingTelemetryTest < Minitest::Test
   end
 
   def execute_with_telemetry telemetry, io
-    conductor = Orchestra::Conductor.new :io => io
+    invoker = Orchestra::Invoker.new :io => io
 
-    conductor.add_observer TelemetryRecorder.new telemetry
+    invoker.add_observer TelemetryRecorder.new telemetry
 
-    conductor.execute Examples::FizzBuzz, :up_to => 16
+    invoker.invoke Examples::FizzBuzz, :up_to => 16
   end
 end

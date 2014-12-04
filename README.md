@@ -346,19 +346,19 @@ end
 
 These collections can operate as filters; the output list is a mapping of the input list *transformed* by the `execute` block. When the `execute` block returns `nil`, the output shrinks by one element. Consider the FizzBuzz example at the top of this document. Notice that `0` doesn't get printed out. This is because the `execute` block in `apply_fizzbuzz` returned nil when the `num` was zero. `nil` values get `compact`'ed.
 
-## Invoking an operation through a conductor
+## Using invokers to execute operations
 
-Now that you understand how to define operations, we can do some cool things with them. First, though, we need to change the way we invoke operations. Let's instantiate a `Conductor`, and have *that* execute our operations for us:
+Now that you understand how to define operations, we can do some cool things with them. First, though, we need to change the way we execute operations. Let's instantiate an `Invoker`, and have *that* execute our operations for us:
 
 ```ruby
-conductor = Orchestra::Conductor.new
-conductor.execute InvitationService, :account_name => 'realntl'
+invoker = Orchestra::Invoker.new
+invoker.execute InvitationService, :account_name => 'realntl'
 ```
 
-What did that buy us? First, we can configure the size of the thread pool specifically for this conductor:
+What did that buy us? First, we can configure the size of the thread pool specifically for this invoker:
 
 ```ruby
-conductor.thread_count = 5
+invoker.thread_count = 5
 ```
 
 Second, we can inject *services* into our operation. Our operation needs to be modified such that our database connections and API access are passed in as dependencies:
@@ -383,24 +383,24 @@ step :fetch_blacklist do
 end
 ```
 
-Now we can teach the conductor how to supply the services.
+Now we can teach the invoker how to supply the services.
 
 ```ruby
-conductor = Orchestra::Conductor.new(
+invoker = Orchestra::Invoker.new(
   :flutter_api     => FlutterAPI,
   :blacklist_table => Blacklist,
 )
 ```
 
-We can also override the conductor's service registry by supplying them into the execution itself, as we do any other dependency like `account_name`:
+We can also override the invoker's service registry by supplying them into the execution itself, as we do any other dependency like `account_name`:
 
 ```ruby
-conductor.execute InvitationService, :account_name => 'realntl', :blacklist_table => mock
+invoker.execute InvitationService, :account_name => 'realntl', :blacklist_table => mock
 ```
 
 What did this buy us? Two big things. We can now attach *observers* to the execution, and we can actually record all calls in and out of the `flutter_api` and `blacklist_table` services. The former allows us to share the internal operation of the execution with the rest of the system without breaking encapsulation, and the latter allows us to actually replay the operation against recordings of live performances.
 
-Additionally, you can pass the `conductor` into steps. In this way you can embed one operation inside another:
+Additionally, you can pass the `invoker` into steps. In this way you can embed one operation inside another:
 
 ```ruby
 inner_operation = Orchestra::Operation.new do
@@ -414,16 +414,16 @@ end
 
 outer_operation = Orchestra::Operation.new do
   result :baz do
-    depends_on :conductor
+    depends_on :invoker
     provides :qux
     execute do
-      conductor.execute inner_operation
+      invoker.execute inner_operation
     end
   end
 end
 
-conductor = Conductor.new
-conductor.execute outer_operation
+invoker = Invoker.new
+invoker.execute outer_operation
 ```
 
 To shorten this, the inner operation can be "mounted" inside the outer operation:
@@ -445,10 +445,10 @@ end
 
 ## Observing a performance
 
-You can attach observers to any `Conductor`:
+You can attach observers to any `Invoker`:
 
 ```ruby
-conductor.add_observer MyObserver
+invoker.add_observer MyObserver
 
 class MyObserver
   def update event_name, *args
@@ -481,10 +481,10 @@ All observers attached to the execution of the outer operation will also attach 
 
 The final main feature of Orchestra is the ability to record the service calls throughout an operation. These recordings can then be used to replay operations. This could be helpful, for instance, to attach to exceptions in your exception logging service so that programmers can replay failed executions on their development environments. In addition, these recordings could be used to drive integration testing. Thus, instead of using separate tools such as ActiveRecord fixtures, FactoryGirl, and VCR for every service dependency, you can test your operations with one single setup artifact.
 
-You can record a performance put on by any `Conductor` by calling `#record` instead of `#execute`:
+You can record a performance put on by any `Invoker` by calling `#record` instead of `#execute`:
 
 ```ruby
-recording = conductor.record InvitationService, :account_name => 'realntl'
+recording = invoker.record InvitationService, :account_name => 'realntl'
 recording.output # <-- the usual output is attached to the recording itself
 ```
 
