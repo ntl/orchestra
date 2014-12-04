@@ -14,7 +14,7 @@ class ThreadPoolTest < Minitest::Test
   end
 
   def test_shutting_down
-    100.times do |idx|
+    50.times do |idx|
       assert_equal 5, @thread_pool.count
       begin
         @thread_pool.shutdown
@@ -36,15 +36,15 @@ class ThreadPoolTest < Minitest::Test
       assert_equal expected_status, @thread_pool.status, "going from #{old_count} ⇒ #{new_count}"
     }
 
-    # Add 100 times
-    100.times do iterate.call 1 end
+    # Add 50 times
+    50.times do iterate.call 1 end
 
-    # Remove 100 times
-    100.times do iterate.call -1 end
+    # Remove 50 times
+    50.times do iterate.call -1 end
   end
 
   def test_performing_work
-    100.times do
+    50.times do
       result = @thread_pool.perform do :deadbeef end
 
       assert_equal :deadbeef, result
@@ -52,22 +52,22 @@ class ThreadPoolTest < Minitest::Test
   end
 
   def test_enqueueing_work
-    jobs = 100.times.map do |num|
+    jobs = 50.times.map do |num|
       @thread_pool.enqueue do (num + 1) * 2 end
     end
 
     result = jobs.map &:wait
 
-    assert_equal 100, result.uniq.size
+    assert_equal 50,  result.uniq.size
     assert_equal 2,   result.first
-    assert_equal 200, result.last
+    assert_equal 100, result.last
   end
 
   def test_handling_exceptions
     Thread.current.abort_on_exception = false
     old_thread_count = @thread_pool.count
 
-    input = 100.times.to_a
+    input = 50.times.to_a
     input << nil
 
     10.times do

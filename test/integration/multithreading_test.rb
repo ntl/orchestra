@@ -20,7 +20,7 @@ class MultithreadingTest < Minitest::Test
   end
 
   def test_multithreading
-    list = (1..100).to_a
+    list = (1..50).to_a
 
     thread_ids = @conductor.perform @operation, :list => list
 
@@ -28,7 +28,7 @@ class MultithreadingTest < Minitest::Test
   end
 
   def test_exception_during_multithreading
-    list = (1..100).to_a
+    list = (1..50).to_a
     list[23] = :blow_up
 
     assert_raises CustomError do
