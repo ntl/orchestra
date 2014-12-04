@@ -6,7 +6,7 @@ module Examples
     step :fetch_followers do
       depends_on :account_name, :http
       provides :followers
-      perform do
+      execute do
         json = http.get "flutter.io", "/users/#{account_name}/followers"
           JSON.parse json
       end
@@ -15,7 +15,7 @@ module Examples
     step :fetch_blacklist do
       depends_on :db
       provides :blacklist
-      perform do
+      execute do
         rows = db.execute "SELECT account_name FROM blacklists"
         rows.map do |row| row.fetch 0 end
       end
@@ -24,7 +24,7 @@ module Examples
     step :remove_blacklisted_followers do
       depends_on :blacklist
       modifies :followers
-      perform do
+      execute do
         followers.reject! do |follower|
           account_name = follower.fetch 'username'
           blacklist.include? account_name
@@ -35,7 +35,7 @@ module Examples
     step :filter_robots do
       depends_on :http
       modifies :followers, :collection => true
-      perform do |follower|
+      execute do |follower|
         account_name = follower.fetch 'username'
         json = http.get "flutter.io", "/users/#{account_name}"
         account = JSON.load json
@@ -48,7 +48,7 @@ module Examples
     finally :deliver_emails do
       depends_on :smtp, :message => DEFAULT_MESSAGE
       iterates_over :followers
-      perform do |follower|
+      execute do |follower|
         email = follower.fetch 'email_address'
         smtp.deliver message, :to => email
       end

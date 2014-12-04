@@ -11,7 +11,7 @@ operation = Orchestra::Operation.new do
   step :make_array do
     depends_on :up_to
     provides :array
-    perform do
+    execute do
       limit.times.to_a
     end
   end
@@ -19,7 +19,7 @@ operation = Orchestra::Operation.new do
   step :apply_fizzbuzz do
     iterates_over :array
     provides :fizzbuzz
-    perform do |num|
+    execute do |num|
       next if num == 0 # filter 0 from the output
       str = ''
       str << "Fizz" if num.mod 3 == 0
@@ -31,13 +31,13 @@ operation = Orchestra::Operation.new do
 
   finally do
     iterates_over :fizzbuzz
-    perform do |str|
+    execute do |str|
       puts str
     end
   end
 end
 
-Orchestra.perform operation, :up_to => 31
+Orchestra.execute operation, :up_to => 31
 ```
 
 There is an easy way to take this gem for a test drive. Clone the repo, and at the project root:
@@ -65,8 +65,8 @@ Finished in 0.379958s, 126.3298 runs/s, 1526.4845 assertions/s.
 Also, you can access the examples:
 
 ```ruby
-[1] pry(Orchestra)> Orchestra.perform FizzBuzz, :up_to => 31
-[1] pry(Orchestra)> Orchestra.perform InvitationService, :account_name => 'realntl`
+[1] pry(Orchestra)> Orchestra.execute FizzBuzz, :up_to => 31
+[1] pry(Orchestra)> Orchestra.execute InvitationService, :account_name => 'realntl`
 ```
 
 ## Why?
@@ -142,14 +142,14 @@ InvitationService = Orchestra::Operation.new do
   step :fetch_followers do
     depends_on :account_name
     provides :followers
-    perform do
+    execute do
       FlutterAPI.get_account account_name
     end
   end
 
   step :fetch_blacklist do
     provides :blacklist
-    perform do
+    execute do
       Blacklist.pluck :flutter_account_name
     end
   end
@@ -157,7 +157,7 @@ InvitationService = Orchestra::Operation.new do
   step :remove_blacklisted_followers do
     depends_on :blacklist
     modifies :followers
-    perform do
+    execute do
       followers.reject! do |follower|
         account_name = follower.fetch 'username'
         blacklist.include? account_name
@@ -167,7 +167,7 @@ InvitationService = Orchestra::Operation.new do
 
   step :filter_robots do
     modifies :followers, :collection => true
-    perform do |follower|
+    execute do |follower|
       account_name = follower.fetch 'username'
       account = FlutterAPI.get_account account_name
       next unless account['following'] > ROBOT_FOLLOWER_THRESHHOLD
@@ -179,21 +179,21 @@ InvitationService = Orchestra::Operation.new do
   finally :deliver_emails do
     depends_on :message => DEFAULT_MESSAGE
     iterates_over :followers
-    perform do |follower|
+    execute do |follower|
       EmailDelivery.send message, :to => follower
     end
   end
 end
 ```
 
-At first sight, that very likely appears to be a giant pile of ruby DSL goop. And you would be correct. I'll show you how to plug in POROs in a bit, and there are some further improvements that will make the indirection worth while. For now, here is how you would perform this command:
+At first sight, that very likely appears to be a giant pile of ruby DSL goop. And you would be correct. I'll show you how to plug in POROs in a bit, and there are some further improvements that will make the indirection worth while. For now, here is how you would execute this command:
 
 ```ruby
 # Use the default message
-Orchestra.perform InvitationService, :account_name => 'realntl'
+Orchestra.execute InvitationService, :account_name => 'realntl'
 
 # Override the default message
-Orchestra.perform InvitationService, :account_name => 'realntl', :message => 'Say cheese!'
+Orchestra.execute InvitationService, :account_name => 'realntl', :message => 'Say cheese!'
 ```
 
 There's a lot more to learn, but let's start by building an understanding of the DSL.
@@ -206,19 +206,19 @@ An *operation* is a collection of steps that each individually take part in prod
 step :fetch_followers do
   depends_on :account_name
   provides :followers
-  perform do
+  execute do
     FlutterAPI.get_account account_name
   end
 end
 ```
 
-This step depends on something called an `account_name`. This means you must supply `:account_name` when you perform the operation, otherwise, `:fetch_followers` won't work. `orchestra` ensures that your performance can't commence without the required input:
+This node depends on something called an `account_name`. This means you must supply `:account_name` when you execute the operation, otherwise, `:fetch_followers` won't work. `orchestra` ensures that your invokation can't commence without the required input:
 
 ```ruby
 # Raises Orchestra::MissingInputError: Missing input :account_name
-operation.perform
+operation.execute
 # Works correctly
-operation.perform :account_name => 'realntl'
+operation.execute :account_name => 'realntl'
 ```
 
 Dependencies can be optional. In the above example, `deliver_emails` defaults the `:message` input to `DEFAULT_MESSAGE`.
@@ -227,7 +227,7 @@ Often, you will need the output of one operation to feed into the input of anoth
 
 ```ruby
 # Never invokes fetch_blacklist
-operation.perform :account_name => 'realntl', :blacklist => %w(dhh unclebobmartin)
+operation.execute :account_name => 'realntl', :blacklist => %w(dhh unclebobmartin)
 ```
 
 This allows your operations to be reused in cases where some of the dependencies can already be satisfied.
@@ -261,7 +261,7 @@ Orchestra::Operation.new do
   step :foo do
     depends_on :bar
     provides :foo # optional, since the step is called :foo
-    perform do … end
+    execute do … end
   end
 
   self.result = :foo
@@ -275,18 +275,18 @@ Orchestra::Operation.new do
   # Define a step called :foo and make it the result
   result :foo do
     depends_on :bar
-    perform do … end
+    execute do … end
   end
 end
 ```
 
-The third is a minor variation of the second. The only difference is that the operation will always return `true`. `finally` makes sense for operations that perform side effects (e.g. Command objects), whereas `result` will make sense for queries.
+The third is a minor variation of the second. The only difference is that the operation will always return `true`. `finally` makes sense for operations that execute side effects (e.g. Command objects), whereas `result` will make sense for queries.
 
 ```ruby
 Orchestra::Operation.new do
   finally :foo do
     depends_on :bar
-    perform do … end
+    execute do … end
   end
 end
 ```
@@ -303,7 +303,7 @@ class FilterRobots
     @followers = followers
   end
 
-  def perform follower
+  def execute follower
     account_name = follower.fetch 'account_name'
     account = FlutterAPI.get_account account_name
     next unless account['following'] > ROBOT_FOLLOWER_THRESHHOLD
@@ -313,13 +313,13 @@ class FilterRobots
 end
 ```
 
-Orchestra infers the dependencies from `FilterRobots#initialize`, and automatically instantiates the object for you during the performance. You can alter the name of the method:
+Orchestra infers the dependencies from `FilterRobots#initialize`, and automatically instantiates the object for you during execution. You can alter the name of the method:
 
 ```ruby
 step MyPoro, :method => :call
 ```
 
-You can also hook into singletons like `Module` (or a `Class` that implements `self.perform`):
+You can also hook into singletons like `Module` (or a `Class` that implements `self.execute`):
 
 ```ruby
 step MySingleton, :method => :invoke
@@ -335,7 +335,7 @@ By default, the name of the provision will be inferred from the object name.
 
 Two of the steps in the `InvitationService` orchestration -- `filter_robots` and `deliver_emails` -- actually operate on *collections*. `deliver_emails` indicates that `:followers` is a collection by using the `iterates_over` annotation instead of `depends_on`. In fact, the two annotations are identical *except* that `iterates_over` indicates that the dependency is in fact going to be a list. Collections can be defined on a `modifies` annotation, as well, by supplying `:collection => true` as in the case of `filter_robots`.
 
-When steps iterate over collections, Orchestra invokes `perform do … end` block once for each item in the collection passed in. It also spreads out each invokation across a thread pool. By default, there is only one thread in the thread pool. You can reconfigure that globally in an initializer of some kind:
+When steps iterate over collections, Orchestra invokes `execute do … end` block once for each item in the collection passed in. It also spreads out each invokation across a thread pool. By default, there is only one thread in the thread pool. You can reconfigure that globally in an initializer of some kind:
 
 ```ruby
 Orchestra.configure do
@@ -344,15 +344,15 @@ Orchestra.configure do
 end
 ```
 
-These collections can operate as filters; the output list is a mapping of the input list *transformed* by the `perform` block. When the `perform` block returns `nil`, the output shrinks by one element. Consider the FizzBuzz example at the top of this document. Notice that `0` doesn't get printed out. This is because the `perform` block in `apply_fizzbuzz` returned nil when the `num` was zero. `nil` values get `compact`'ed.
+These collections can operate as filters; the output list is a mapping of the input list *transformed* by the `execute` block. When the `execute` block returns `nil`, the output shrinks by one element. Consider the FizzBuzz example at the top of this document. Notice that `0` doesn't get printed out. This is because the `execute` block in `apply_fizzbuzz` returned nil when the `num` was zero. `nil` values get `compact`'ed.
 
 ## Invoking an operation through a conductor
 
-Now that you understand how to define operations, we can do some cool things with them. First, though, we need to change the way we invoke operations. Let's instantiate a `Conductor`, and have *that* perform our operations for us:
+Now that you understand how to define operations, we can do some cool things with them. First, though, we need to change the way we invoke operations. Let's instantiate a `Conductor`, and have *that* execute our operations for us:
 
 ```ruby
 conductor = Orchestra::Conductor.new
-conductor.perform InvitationService, :account_name => 'realntl'
+conductor.execute InvitationService, :account_name => 'realntl'
 ```
 
 What did that buy us? First, we can configure the size of the thread pool specifically for this conductor:
@@ -367,7 +367,7 @@ Second, we can inject *services* into our operation. Our operation needs to be m
 step :fetch_followers do
   depends_on :account_name, :flutter_api
   provides :followers
-  perform do
+  execute do
     flutter_api.get_account account_name
   end
 end
@@ -377,7 +377,7 @@ end
 step :fetch_blacklist do
   depends_on :blacklist_table
   provides :blacklist
-  perform do
+  execute do
     blacklist_table.pluck :flutter_account_name
   end
 end
@@ -392,13 +392,13 @@ conductor = Orchestra::Conductor.new(
 )
 ```
 
-We can also override the conductor's service registry by supplying them into the performance itself, as we do any other dependency like `account_name`:
+We can also override the conductor's service registry by supplying them into the execution itself, as we do any other dependency like `account_name`:
 
 ```ruby
-conductor.perform InvitationService, :account_name => 'realntl', :blacklist_table => mock
+conductor.execute InvitationService, :account_name => 'realntl', :blacklist_table => mock
 ```
 
-What did this buy us? Two big things. We can now attach *observers* to the performance, and we can actually record all calls in and out of the `flutter_api` and `blacklist_table` services. The former allows us to share the internal operation of the performance with the rest of the system without breaking encapsulation, and the latter allows us to actually replay the operation against recorded snapshots of live performances.
+What did this buy us? Two big things. We can now attach *observers* to the execution, and we can actually record all calls in and out of the `flutter_api` and `blacklist_table` services. The former allows us to share the internal operation of the execution with the rest of the system without breaking encapsulation, and the latter allows us to actually replay the operation against recordings of live performances.
 
 Additionally, you can pass the `conductor` into steps. In this way you can embed one operation inside another:
 
@@ -406,7 +406,7 @@ Additionally, you can pass the `conductor` into steps. In this way you can embed
 inner_operation = Orchestra::Operation.new do
   result :foo do
     provides :bar
-    perform do
+    execute do
       bar * 2
     end
   end
@@ -416,14 +416,14 @@ outer_operation = Orchestra::Operation.new do
   result :baz do
     depends_on :conductor
     provides :qux
-    perform do
-      conductor.perform inner_operation
+    execute do
+      conductor.execute inner_operation
     end
   end
 end
 
 conductor = Conductor.new
-conductor.perform outer_operation
+conductor.execute outer_operation
 ```
 
 To shorten this, the inner operation can be "mounted" inside the outer operation:
@@ -432,7 +432,7 @@ To shorten this, the inner operation can be "mounted" inside the outer operation
 inner_operation = Orchestra::Operation.new do
   result :foo do
     provides :bar
-    perform do
+    execute do
       bar * 2
     end
   end
@@ -473,13 +473,13 @@ The arguments passed to `update` will vary based on the event:
 | `:step_exited`           | The name of the step                 | Output of the step                |
 | `:error_raised`          | The error itself                     | `nil`                             |
 
-Embedded performances will inherit the observers of the outer operation.
+All observers attached to the execution of the outer operation will also attach to the inner operation.
 
 ## Recording and playing back services
 
-The final main feature of Orchestra is the ability to record the service calls throughout an operation. These recordings can then be used to replay operations. This could be helpful, for instance, to attach to exceptions in your exception logging service so that programmers can replay failed performances on their development environments. In addition, these recordings could be used to drive integration testing. Thus, instead of using separate tools such as ActiveRecord fixtures, FactoryGirl, and VCR for every service dependency, you can test your operations with one single setup artifact.
+The final main feature of Orchestra is the ability to record the service calls throughout an operation. These recordings can then be used to replay operations. This could be helpful, for instance, to attach to exceptions in your exception logging service so that programmers can replay failed executions on their development environments. In addition, these recordings could be used to drive integration testing. Thus, instead of using separate tools such as ActiveRecord fixtures, FactoryGirl, and VCR for every service dependency, you can test your operations with one single setup artifact.
 
-You can record a performance on any `Conductor` by calling `#record` instead of `#perform`:
+You can record a performance put on by any `Conductor` by calling `#record` instead of `#execute`:
 
 ```ruby
 recording = conductor.record InvitationService, :account_name => 'realntl'

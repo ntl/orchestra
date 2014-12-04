@@ -10,8 +10,8 @@ module Orchestra
     Configuration.module_eval &block
   end
 
-  def perform operation, inputs = {}
-    Conductor.new.perform operation, inputs
+  def execute operation, inputs = {}
+    Conductor.new.execute operation, inputs
   end
 
   def replay_recording operation, store, input = {}

@@ -9,18 +9,18 @@ module Orchestra
       self.thread_count = Configuration.thread_count
     end
 
-    def perform operation, input = {}
-      operation.perform self, input do |performance|
-        copy_observers performance
-        yield performance if block_given?
+    def execute operation, input = {}
+      operation.execute self, input do |execution|
+        copy_observers execution
+        yield execution if block_given?
       end
     end
 
     def record *args
       recording = Recording.new
       add_observer recording
-      perform *args do |performance|
-        performance.add_observer recording
+      execute *args do |execution|
+        execution.add_observer recording
       end
       recording
     ensure

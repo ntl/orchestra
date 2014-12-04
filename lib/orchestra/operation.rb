@@ -27,20 +27,20 @@ module Orchestra
       output.select do |key, _| key = result end
     end
 
-    def start_performance *args
+    def start_execution *args
       conductor, input = extract_args args
       run_list = RunList.build steps, result, input.keys
-      performance = Performance.new conductor, run_list, input
-      yield performance if block_given?
-      performance.publish :operation_entered, name, input
-      performance
+      execution = Execution.start_operation conductor, run_list, input
+      yield execution if block_given?
+      execution.publish :operation_entered, name, input
+      execution
     end
 
-    def perform *args, &block
-      performance = start_performance *args, &block
-      performance.perform
-      output = performance.extract_result result
-      performance.publish :operation_exited, name, output
+    def execute *args, &block
+      execution = start_execution *args, &block
+      execution.execute
+      output = execution.extract_result result
+      execution.publish :operation_exited, name, output
       @command ? nil : output
     end
 

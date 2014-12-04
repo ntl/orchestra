@@ -4,7 +4,7 @@ class StepTest < Minitest::Test
 
     assert_equal(
       { :bar => 4 },
-      step.perform(:foo => 2, :bar => 2),
+      step.execute(:foo => 2, :bar => 2),
     )
   end
 
@@ -12,12 +12,12 @@ class StepTest < Minitest::Test
     step = Orchestra::Step::InlineStep.new(
       :dependencies => [:foo],
       :provides => [:bar],
-      :perform_block => lambda { { :bar => (foo * 2) } },
+      :execute_block => lambda { { :bar => (foo * 2) } },
     )
 
     assert_equal(
       { :bar => 4 },
-      step.perform(:foo => 2),
+      step.execute(:foo => 2),
     )
   end
 
@@ -25,12 +25,12 @@ class StepTest < Minitest::Test
     step = Orchestra::Step::InlineStep.new(
       :dependencies => [:foo],
       :provides => [:bar],
-      :perform_block => lambda { { :baz => (foo * 2) } },
+      :execute_block => lambda { { :baz => (foo * 2) } },
     )
 
     assert_equal(
       { :bar => { :baz => 4 } },
-      step.perform(:foo => 2),
+      step.execute(:foo => 2),
     )
   end
 
@@ -38,13 +38,13 @@ class StepTest < Minitest::Test
     step = Orchestra::Step::InlineStep.new(
       :dependencies => [:foo],
       :provides => [:bar],
-      :perform_block => lambda { |e| e * 2 },
+      :execute_block => lambda { |e| e * 2 },
       :collection => :foo,
     )
 
     assert_equal(
       { :bar => [2, 4, 6, 8] },
-      step.perform(:foo => [1, 2, 3, 4]),
+      step.execute(:foo => [1, 2, 3, 4]),
     )
   end
 
@@ -53,7 +53,7 @@ class StepTest < Minitest::Test
 
     assert_equal(
       { :bar => 8 },
-      step.perform(:foo => 2),
+      step.execute(:foo => 2),
     )
   end
 
@@ -72,10 +72,10 @@ class StepTest < Minitest::Test
   def test_step_fails_to_supply_provisions
     step = Orchestra::Step::InlineStep.new(
       :provides => [:foo, :bar, :baz],
-      :perform_block => lambda { nil },
+      :execute_block => lambda { nil },
     )
 
-    error = assert_raises Orchestra::MissingProvisionError do step.perform end
+    error = assert_raises Orchestra::MissingProvisionError do step.execute end
 
     assert_equal(
       "failed to supply output: :foo, :bar and :baz",
@@ -86,10 +86,10 @@ class StepTest < Minitest::Test
   def test_cannot_return_nil
     step = Orchestra::Step::InlineStep.new(
       :provides => [:foo],
-      :perform_block => lambda do nil end
+      :execute_block => lambda do nil end
     )
 
-    error = assert_raises Orchestra::MissingProvisionError do step.perform end
+    error = assert_raises Orchestra::MissingProvisionError do step.execute end
 
     assert_equal(
       "failed to supply output: :foo",
@@ -100,12 +100,12 @@ class StepTest < Minitest::Test
   def test_step_provides_extra_provisions
     step = Orchestra::Step::InlineStep.new(
       :provides => [:foo],
-      :perform_block => lambda do { :foo => :bar, :baz => :qux } end,
+      :execute_block => lambda do { :foo => :bar, :baz => :qux } end,
     )
 
     assert_equal(
       { :foo => :bar },
-      step.perform,
+      step.execute,
     )
   end
 
@@ -116,7 +116,7 @@ class StepTest < Minitest::Test
       :defaults => { :bar => lambda { 4 } },
       :dependencies => [:foo, :bar],
       :provides => [:bar],
-      :perform_block => lambda { foo * bar },
+      :execute_block => lambda { foo * bar },
     )
   end
 end

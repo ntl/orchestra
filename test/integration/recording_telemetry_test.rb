@@ -3,7 +3,7 @@ class RecordingTelemetryTest < Minitest::Test
     output = StringIO.new
     telemetry = {}
 
-    perform_with_telemetry telemetry, output
+    execute_with_telemetry telemetry, output
 
     assert_equal_telemetry expected_telemetry, telemetry
   end
@@ -73,14 +73,11 @@ class RecordingTelemetryTest < Minitest::Test
     }
   end
 
-  def perform_with_telemetry telemetry, io
+  def execute_with_telemetry telemetry, io
     conductor = Orchestra::Conductor.new :io => io
 
     conductor.add_observer TelemetryRecorder.new telemetry
 
-    conductor.perform(
-      Examples::FizzBuzz,
-      :up_to => 16,
-    )
+    conductor.execute Examples::FizzBuzz, :up_to => 16
   end
 end

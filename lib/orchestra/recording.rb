@@ -37,7 +37,7 @@ module Orchestra
         replayed_services[svc] = Playback.build service_recording
       end
       conductor = Conductor.new replayed_services
-      conductor.perform operation, input
+      conductor.execute operation, input
     end
   end
 end

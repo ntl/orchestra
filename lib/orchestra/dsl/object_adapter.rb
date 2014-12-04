@@ -2,7 +2,7 @@ module Orchestra
   module DSL
     class ObjectAdapter
       def self.build_step object, args = {}
-        method_name = args.delete :method do :perform end
+        method_name = args.delete :method do :execute end
         collection = args.delete :iterates_over
         adapter_type = determine_type object, method_name
         adapter = adapter_type.new object, method_name, collection
@@ -23,7 +23,7 @@ module Orchestra
 
       def initialize object, method_name, collection
         @collection = collection
-        @method_name = method_name || :perform
+        @method_name = method_name || :execute
         @object = object
       end
 
@@ -56,7 +56,7 @@ module Orchestra
         end
       end
 
-      def perform state
+      def execute state
         deps = object_method.dependencies
         input = state.select do |key, _| deps.include? key end
         Invokr.invoke :method => method_name, :on => object, :with => input
@@ -74,7 +74,7 @@ module Orchestra
           "#{object} does not implement instance method `#{method_name}'"
       end
 
-      def perform state, maybe_item = nil
+      def execute state, maybe_item = nil
         instance = Invokr.inject object, :using => state
         args = [method_name]
         args << maybe_item if collection?
@@ -125,8 +125,8 @@ module Orchestra
         end
       end
 
-      def perform *args
-        @__adapter__.perform @__state__, *args
+      def execute *args
+        @__adapter__.execute @__state__, *args
       end
     end
 

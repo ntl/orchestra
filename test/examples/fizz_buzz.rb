@@ -3,7 +3,7 @@ module Examples
     step :make_array do
       depends_on :up_to
       provides :array
-      perform do
+      execute do
         up_to.times.to_a
       end
     end
@@ -11,7 +11,7 @@ module Examples
     step :apply_fizzbuzz do
       iterates_over :array
       provides :fizzbuzz
-      perform do |num|
+      execute do |num|
         next if num == 0 # filter 0 from the output
         str = ''
         str << "Fizz" if num % 3 == 0
@@ -24,7 +24,7 @@ module Examples
     finally :print do
       depends_on :io
       iterates_over :fizzbuzz
-      perform do |str|
+      execute do |str|
         io.puts str
       end
     end

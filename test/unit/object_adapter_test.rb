@@ -16,7 +16,7 @@ class ObjectAdapterTest < Minitest::Test
       @builder.add_step Upcaser, :provides => :words
     end
 
-    assert_equal "ObjectAdapterTest::Upcaser does not implement instance method `perform'", error.message
+    assert_equal "ObjectAdapterTest::Upcaser does not implement instance method `execute'", error.message
   end
 
   def test_dependencies_inferred_from_method_defaults
@@ -26,7 +26,7 @@ class ObjectAdapterTest < Minitest::Test
     assert_equal [:words], step.required_dependencies
   end
 
-  def test_performing_an_operation_with_integrated_objects
+  def test_executing_an_operation_with_integrated_objects
     operation = Orchestra::Operation.new do
       step Splitter, :provides => :words
       step Upcaser, :iterates_over => :words, :provides => :upcased_words, :method => :call
@@ -35,7 +35,7 @@ class ObjectAdapterTest < Minitest::Test
       self.result = :joiner
     end
 
-    result = Orchestra.perform(
+    result = Orchestra.execute(
       operation,
       :sentence  => "the quick brown fox jumps over the lazy dog",
       :bold_text => "*",
@@ -61,7 +61,7 @@ class ObjectAdapterTest < Minitest::Test
   end
 
   module Splitter
-    def self.perform sentence
+    def self.execute sentence
       sentence.split %r{[[:space:]]+}
     end
   end

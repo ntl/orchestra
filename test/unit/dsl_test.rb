@@ -1,5 +1,5 @@
 class DSLTest < Minitest::Test
-  def test_failing_to_supply_perform_block
+  def test_failing_to_supply_execute_block
     error = assert_raises ArgumentError do
       Orchestra::Step::InlineStep.build do
         provides :foo
@@ -7,7 +7,7 @@ class DSLTest < Minitest::Test
       end
     end
 
-    assert_equal "expected inline step to define a perform block", error.message
+    assert_equal "expected inline step to define a execute block", error.message
   end
 
   def test_two_steps_one_name
@@ -15,11 +15,11 @@ class DSLTest < Minitest::Test
       Orchestra::Operation.new do
         step :foo do
           depends_on :bar
-          perform do bar + bar end
+          execute do bar + bar end
         end
         step :foo do
           depends_on :qux
-          perform do qux * qux end
+          execute do qux * qux end
         end
       end
     end
@@ -29,13 +29,13 @@ class DSLTest < Minitest::Test
 
   def test_result_step
     operation = Orchestra::Operation.new do
-      result :foo do perform do 'foo' end end
+      result :foo do execute do 'foo' end end
     end
     assert_equal :foo, operation.result
 
     error = assert_raises ArgumentError do
       operation = Orchestra::Operation.new do
-        result do perform do 'foo' end end
+        result do execute do 'foo' end end
       end
     end
     assert_equal "Could not infer name for step from a provision", error.message
@@ -43,7 +43,7 @@ class DSLTest < Minitest::Test
     operation = Orchestra::Operation.new do
       result do
         provides :foo
-        perform do 'foo' end
+        execute do 'foo' end
       end
     end
     assert_equal :foo, operation.result
@@ -53,18 +53,18 @@ class DSLTest < Minitest::Test
     operation = Orchestra::Operation.new do
       step :unnecessary do
         provides :baz
-        perform do raise "Can't get here" end
+        execute do raise "Can't get here" end
       end
 
       step :necessary do
         depends_on :baz
         provides :bar
-        perform do baz + 1 end
+        execute do baz + 1 end
       end
 
       finally do
         depends_on :bar
-        perform do bar * 2 end
+        execute do bar * 2 end
       end
     end
 
@@ -80,7 +80,7 @@ class DSLTest < Minitest::Test
     conductor = Orchestra::Conductor.new
     conductor.add_observer test_observer
 
-    assert_equal nil, conductor.perform(operation, :baz => 3)
+    assert_equal nil, conductor.execute(operation, :baz => 3)
     assert_equal 8,   test_observer.result
   end
 
@@ -88,12 +88,12 @@ class DSLTest < Minitest::Test
     operation = Orchestra::Operation.new do
       result do
         modifies :list
-        perform do list << :foo end
+        execute do list << :foo end
       end
     end
 
     ary = []
-    Orchestra.perform operation, :list => ary
+    Orchestra.execute operation, :list => ary
 
     assert_equal [:foo], ary
   end
@@ -102,7 +102,7 @@ class DSLTest < Minitest::Test
     error = assert_raises ArgumentError do
       Orchestra::Operation.new do
         step :foo do
-          perform do 'foo' end
+          execute do 'foo' end
         end
       end
     end

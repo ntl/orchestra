@@ -25,9 +25,8 @@ module Orchestra
       collection ? true : false
     end
 
-    def perform input = {}
-      performance = Performance.new Conductor.new, {}, input
-      Performance::Movement.perform self, performance
+    def execute input = {}
+      Execution.execute_step self, input
     end
 
     def process raw_output
@@ -58,20 +57,20 @@ module Orchestra
         builder.build_step
       end
 
-      attr :context_class, :defaults, :perform_block
+      attr :context_class, :defaults, :execute_block
 
       def initialize args = {}
         @defaults = args.delete :defaults do {} end
-        @perform_block = args.fetch :perform_block
-        args.delete :perform_block
+        @execute_block = args.fetch :execute_block
+        args.delete :execute_block
         super args
         @context_class = build_execution_context_class
         validate!
       end
 
       def validate!
-        unless perform_block
-          raise ArgumentError, "expected inline step to define a perform block"
+        unless execute_block
+          raise ArgumentError, "expected inline step to define a execute block"
         end
       end
 
@@ -86,7 +85,7 @@ module Orchestra
 
       def build_context input
         state = apply_defaults input
-        execution_context = context_class.new state, perform_block
+        execution_context = context_class.new state, execute_block
       end
 
       def apply_defaults input
@@ -110,16 +109,16 @@ module Orchestra
           end
         end
 
-        def initialize state, perform_block
-          @__perform_block__ = perform_block
+        def initialize state, execute_block
+          @__execute_block__ = execute_block
           @__state__ = state
         end
 
-        def perform item = nil
-          if @__perform_block__.arity == 0
-            instance_exec &@__perform_block__
+        def execute item = nil
+          if @__execute_block__.arity == 0
+            instance_exec &@__execute_block__
           else
-            instance_exec item, &@__perform_block__
+            instance_exec item, &@__execute_block__
           end
         end
       end
