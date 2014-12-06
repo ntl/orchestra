@@ -8,7 +8,7 @@ module Orchestra
 
     def execute_step step, input
       operation_execution = Operation.new Conductor.new, {}, input
-      Step.execute step, operation_execution
+      Step.execute step, 'anonymous', operation_execution
     end
 
     class Operation
@@ -37,27 +37,14 @@ module Orchestra
       end
 
       def process name, step
-        input = input_for step
-        publish :step_entered, name, input
-        output = execute_step step
-        publish :step_exited, name, output
+        output = Step.execute step, name, self
         state.merge! output
-      end
-
-      def execute_step step
-        Step.execute step, self
       end
 
       def ensure_inputs_are_present!
         has_dep = state.method :[]
         missing_input = required_dependencies.reject &has_dep
         raise MissingInputError.new missing_input unless missing_input.empty?
-      end
-
-      def input_for step
-        state.reject do |key, val|
-          registry[key] == val or not step.dependencies.include? key
-        end
       end
 
       def extract_result result
@@ -77,7 +64,7 @@ module Orchestra
     class Step
       def self.execute step, *args
         instance = new step, *args
-        step.process instance.execute
+        instance.execute
       end
 
       def self.new step, *args
@@ -91,15 +78,30 @@ module Orchestra
         instance
       end
 
-      attr :context, :step, :operation_execution
+      attr :context, :name, :operation_execution, :step
 
-      def initialize step, operation_execution
-        @step = step
+      def initialize step, name, operation_execution
+        @name = name
         @operation_execution = operation_execution
+        @step = step
         @context = build_context
       end
 
       def execute
+        operation_execution.publish :step_entered, name, input
+        output = step.process invoke
+        operation_execution.publish :step_exited, name, output
+        output
+      end
+
+      def input
+        registry = operation_execution.registry
+        operation_execution.state.reject do |key, val|
+          registry[key] == val or not step.dependencies.include? key
+        end
+      end
+
+      def invoke
         context.execute
       end
 
@@ -109,7 +111,7 @@ module Orchestra
     end
 
     class CollectionStep < Step
-      def execute
+      def invoke
         batch, output = prepare_collection
         jobs = enqueue_jobs batch do |result, index| output[index] = result end
         jobs.each &:wait
@@ -137,7 +139,7 @@ module Orchestra
     end
 
     class EmbeddedOperation < Step
-      def execute
+      def invoke
         super
         context.state.select do |k,_| k == step.result end
       end
