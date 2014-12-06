@@ -49,7 +49,7 @@ class ThreadPoolTest < Minitest::Test
 
   def test_performing_work
     @iterations.times do
-      result = @thread_pool.perform do :deadbeef end
+      result = @thread_pool.execute do :deadbeef end
 
       assert_equal :deadbeef, result
     end
@@ -77,7 +77,7 @@ class ThreadPoolTest < Minitest::Test
     10.times do
       assert_raises NoMethodError do
         input.each do |num|
-          @thread_pool.perform do num * 2 end
+          @thread_pool.execute do num * 2 end
         end
       end
     end

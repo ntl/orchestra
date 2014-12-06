@@ -1,7 +1,5 @@
 module Orchestra
-  class Node
-    autoload :Output, "orchestra/node/output"
-
+  class Step
     attr :collection, :dependencies, :provisions
 
     def initialize args = {}
@@ -27,16 +25,15 @@ module Orchestra
       collection ? true : false
     end
 
-    def perform input = {}
-      performance = Performance.new Conductor.new, {}, input
-      Performance::Movement.perform self, performance
+    def execute input = {}
+      Execution.execute_step self, input
     end
 
     def process raw_output
       Output.process self, raw_output
     end
 
-    class DelegateNode < Node
+    class ObjectStep < Step
       attr :adapter
 
       def initialize adapter, args = {}
@@ -53,32 +50,32 @@ module Orchestra
       end
     end
 
-    class InlineNode < Node
+    class InlineStep < Step
       def self.build &block
-        builder = DSL::Nodes::Builder.new
-        DSL::Nodes::Context.evaluate builder, &block
-        builder.build_node
+        builder = DSL::Steps::Builder.new
+        DSL::Steps::Context.evaluate builder, &block
+        builder.build_step
       end
 
-      attr :context_class, :defaults, :perform_block
+      attr :context_class, :defaults, :execute_block
 
       def initialize args = {}
         @defaults = args.delete :defaults do {} end
-        @perform_block = args.fetch :perform_block
-        args.delete :perform_block
+        @execute_block = args.fetch :execute_block
+        args.delete :execute_block
         super args
         @context_class = build_execution_context_class
         validate!
       end
 
       def validate!
-        unless perform_block
-          raise ArgumentError, "expected inline node to define a perform block"
+        unless execute_block
+          raise ArgumentError, "expected inline step to define a execute block"
         end
       end
 
       def build_execution_context_class
-        context = Class.new ExecutionContext
+        context = Class.new InlineContext
         context.class_exec dependencies, collection do |deps, collection|
           deps.each do |dep| define_dependency dep end
           alias_method :fetch_collection, collection if collection
@@ -88,7 +85,7 @@ module Orchestra
 
       def build_context input
         state = apply_defaults input
-        execution_context = context_class.new state, perform_block
+        execution_context = context_class.new state, execute_block
       end
 
       def apply_defaults input
@@ -103,7 +100,7 @@ module Orchestra
         defaults.keys
       end
 
-      class ExecutionContext
+      class InlineContext
         def self.define_dependency dep
           define_method dep do
             ivar = "@#{dep}"
@@ -112,16 +109,16 @@ module Orchestra
           end
         end
 
-        def initialize state, perform_block
-          @__perform_block__ = perform_block
+        def initialize state, execute_block
+          @__execute_block__ = execute_block
           @__state__ = state
         end
 
-        def perform item = nil
-          if @__perform_block__.arity == 0
-            instance_exec &@__perform_block__
+        def execute item = nil
+          if @__execute_block__.arity == 0
+            instance_exec &@__execute_block__
           else
-            instance_exec item, &@__perform_block__
+            instance_exec item, &@__execute_block__
           end
         end
       end

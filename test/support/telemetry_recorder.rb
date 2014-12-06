@@ -16,11 +16,11 @@ class TelemetryRecorder
 
   def handle_operation_entered operation_name, input
     return if embedded?
-    @nodes = Hash.new do |hsh, key| hsh[key] = {} end
+    @steps = Hash.new do |hsh, key| hsh[key] = {} end
     @store.update(
       :input => input,
-      :movements => @nodes,
-      :performance_name => operation_name,
+      :movements => @steps,
+      :operation_name => operation_name,
       :service_calls => [],
     )
     @embedded = true
@@ -31,12 +31,12 @@ class TelemetryRecorder
     @embedded = false
   end
 
-  def handle_node_entered name, input
-    @nodes[name][:input] = input
+  def handle_step_entered name, input
+    @steps[name][:input] = input
   end
 
-  def handle_node_exited name, output
-    @nodes[name][:output] = output
+  def handle_step_exited name, output
+    @steps[name][:output] = output
   end
 
   def handle_error_raised error

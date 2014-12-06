@@ -5,61 +5,61 @@ module Orchestra
         attr_writer :command, :result
 
         def initialize
-          @nodes = {}
+          @steps = {}
         end
 
         def build_operation
           raise ArgumentError, "Must supply a result" if @result.nil?
-          raise ArgumentError, "Must supply at least one node" if @nodes.empty?
+          raise ArgumentError, "Must supply at least one step" if @steps.empty?
           Operation.new(
             :command => @command,
-            :nodes   => @nodes,
+            :steps   => @steps,
             :result  => @result,
           )
         end
 
-        def add_node name_or_object, args = {}, &block
-          name, node = case name_or_object
-          when nil then build_anonymous_node block
-          when Operation then build_embedded_operation_node name_or_object
-          when ::String, ::Symbol then build_inline_node name_or_object, block
-          else build_object_node name_or_object, args
+        def add_step name_or_object, args = {}, &block
+          name, step = case name_or_object
+          when nil then build_anonymous_step block
+          when Operation then build_embedded_operation_step name_or_object
+          when ::String, ::Symbol then build_inline_step name_or_object, block
+          else build_object_step name_or_object, args
           end
-          node.provisions << name.to_sym if node.provisions.empty?
-          set_node name.to_sym, node
+          step.provisions << name.to_sym if step.provisions.empty?
+          set_step name.to_sym, step
         end
 
-        def set_node name, node
-          if @nodes.has_key? name
-            raise ArgumentError, "There are duplicate nodes named #{name.inspect}"
+        def set_step name, step
+          if @steps.has_key? name
+            raise ArgumentError, "There are duplicate steps named #{name.inspect}"
           end
-          @nodes[name] = node
-          node.freeze
+          @steps[name] = step
+          step.freeze
         end
 
-        def build_anonymous_node block
-          node = Node::InlineNode.build &block
-          unless node.provisions.size == 1
-            raise ArgumentError, "Could not infer name for node from a provision"
+        def build_anonymous_step block
+          step = Step::InlineStep.build &block
+          unless step.provisions.size == 1
+            raise ArgumentError, "Could not infer name for step from a provision"
           end
-          name = node.provisions.fetch 0
-          [name, node]
+          name = step.provisions.fetch 0
+          [name, step]
         end
 
-        def build_embedded_operation_node operation
+        def build_embedded_operation_step operation
           name = object_name operation
           [name || operation.result, operation]
         end
 
-        def build_inline_node name, block
-          node = Node::InlineNode.build &block
-          [name, node]
+        def build_inline_step name, block
+          step = Step::InlineStep.build &block
+          [name, step]
         end
 
-        def build_object_node object, args
+        def build_object_step object, args
           name = object_name object
-          node = ObjectAdapter.build_node object, args
-          [name, node]
+          step = ObjectAdapter.build_step object, args
+          [name, step]
         end
 
         private
@@ -75,14 +75,14 @@ module Orchestra
           context.instance_eval &block
         end
 
-        attr :nodes
+        attr :steps
 
         def initialize builder
           @builder = builder
         end
 
-        def node *args, &block
-          @builder.add_node *args, &block
+        def step *args, &block
+          @builder.add_step *args, &block
           nil
         end
 
@@ -92,13 +92,13 @@ module Orchestra
         end
 
         def result name = nil, &block
-          node = @builder.add_node name, &block
-          name ||= node.provisions.fetch 0
+          step = @builder.add_step name, &block
+          name ||= step.provisions.fetch 0
           self.result = name
         end
 
         def finally name = :__finally__, &block
-          @builder.add_node name, &block
+          @builder.add_step name, &block
           @builder.command = true
           self.result = name
         end

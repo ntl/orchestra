@@ -2,8 +2,8 @@ class ReplayableOperationTest < Minitest::Test
   include Examples::InvitationService::TestSetup
 
   def test_replaying_an_operation_from_a_previous_recording
-    # Perform the operation against real services, saving a recording
-    recording = perform_for_real
+    # Execute the operation against real services, saving a recording
+    recording = execute_for_real
 
     # Write the recording out to a file. In this case, a StringIO is used for
     # simplicity, and we serialize into JSON
@@ -29,7 +29,7 @@ class ReplayableOperationTest < Minitest::Test
 
   private
 
-  def perform_for_real
+  def execute_for_real
     mock_smtp = build_example_smtp
     db = build_example_database
     stub_followers_request

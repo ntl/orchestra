@@ -3,10 +3,10 @@ class MultithreadingTest < Minitest::Test
 
   def setup
     @operation = Orchestra::Operation.new do
-      node :map_thread_ids do
+      step :map_thread_ids do
         iterates_over :list
         provides :thread_ids
-        perform do |item|
+        execute do |item|
           raise CustomError, "blow up" if item == :blow_up
           Thread.current.object_id
         end
@@ -22,12 +22,12 @@ class MultithreadingTest < Minitest::Test
   def test_multithreading
     list = (1..1000).to_a
 
-    thread_ids = @conductor.perform @operation, :list => list
+    thread_ids = @conductor.execute @operation, :list => list
 
     assert_equal(
       @conductor.thread_count,
       thread_ids.uniq.size,
-      "performance must be spread across threads",
+      "execution must be spread across threads",
     )
   end
 
@@ -36,7 +36,7 @@ class MultithreadingTest < Minitest::Test
     list[23] = :blow_up
 
     assert_raises CustomError do
-      @conductor.perform @operation, :list => list
+      @conductor.execute @operation, :list => list
     end
   end
 end

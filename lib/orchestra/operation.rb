@@ -12,35 +12,35 @@ module Orchestra
 
     extend Forwardable
 
-    def_delegators :@default_run_list, :node_names, :provisions, :dependencies,
+    def_delegators :@default_run_list, :provisions, :dependencies,
       :optional_dependencies, :required_dependencies
 
-    attr :registry, :result, :nodes
+    attr :registry, :result, :steps
 
     def initialize args = {}
-      @result, @command, @nodes = Util.extract_key_args args,
-        :result, :command => false, :nodes => {}
-      @default_run_list = RunList.build nodes, result, []
+      @result, @command, @steps = Util.extract_key_args args,
+        :result, :command => false, :steps => {}
+      @default_run_list = RunList.build steps, result, []
     end
 
     def process output
       output.select do |key, _| key = result end
     end
 
-    def start_performance *args
+    def start_execution *args
       conductor, input = extract_args args
-      run_list = RunList.build nodes, result, input.keys
-      performance = Performance.new conductor, run_list, input
-      yield performance if block_given?
-      performance.publish :operation_entered, name, input
-      performance
+      run_list = RunList.build steps, result, input.keys
+      execution = Execution.start_operation conductor, run_list, input
+      yield execution if block_given?
+      execution.publish :operation_entered, name, input
+      execution
     end
 
-    def perform *args, &block
-      performance = start_performance *args, &block
-      performance.perform
-      output = performance.extract_result result
-      performance.publish :operation_exited, name, output
+    def execute *args, &block
+      execution = start_execution *args, &block
+      execution.execute
+      output = execution.extract_result result
+      execution.publish :operation_exited, name, output
       @command ? nil : output
     end
 

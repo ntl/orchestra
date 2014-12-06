@@ -28,7 +28,7 @@ module Orchestra
       job
     end
 
-    def perform &work
+    def execute &work
       job = enqueue &work
       job.wait
     end
@@ -99,7 +99,7 @@ module Orchestra
     def thread_loop
       Thread.current.abort_on_exception = false
       until (job = queue.pop) == :terminate
-        job.perform
+        job.execute
         Thread.pass
       end
     rescue => error
@@ -127,7 +127,7 @@ module Orchestra
         not @output_queue.empty?
       end
 
-      def perform
+      def execute
         @output_queue.push block.call
       end
 

@@ -1,12 +1,12 @@
 module Orchestra
   module DSL
     class ObjectAdapter
-      def self.build_node object, args = {}
-        method_name = args.delete :method do :perform end
+      def self.build_step object, args = {}
+        method_name = args.delete :method do :execute end
         collection = args.delete :iterates_over
         adapter_type = determine_type object, method_name
         adapter = adapter_type.new object, method_name, collection
-        NodeFactory.build adapter, args
+        StepFactory.build adapter, args
       end
 
       def self.determine_type object, method_name
@@ -23,12 +23,12 @@ module Orchestra
 
       def initialize object, method_name, collection
         @collection = collection
-        @method_name = method_name || :perform
+        @method_name = method_name || :execute
         @object = object
       end
 
       def build_context state
-        ExecutionContext.new self, state
+        ObjectContext.new self, state
       end
 
       def collection?
@@ -36,7 +36,7 @@ module Orchestra
       end
 
       def context_class
-        @context_class ||= Node.build_execution_context_class dependencies
+        @context_class ||= Step.build_execution_context_class dependencies
       end
 
       def dependencies
@@ -56,7 +56,7 @@ module Orchestra
         end
       end
 
-      def perform state
+      def execute state
         deps = object_method.dependencies
         input = state.select do |key, _| deps.include? key end
         Invokr.invoke :method => method_name, :on => object, :with => input
@@ -74,7 +74,7 @@ module Orchestra
           "#{object} does not implement instance method `#{method_name}'"
       end
 
-      def perform state, maybe_item = nil
+      def execute state, maybe_item = nil
         instance = Invokr.inject object, :using => state
         args = [method_name]
         args << maybe_item if collection?
@@ -86,10 +86,10 @@ module Orchestra
       end
     end
 
-    class NodeFactory
+    class StepFactory
       def self.build *args
         instance = new *args
-        instance.build_node
+        instance.build_step
       end
 
       attr :adapter, :compact, :provides, :thread_count
@@ -100,12 +100,12 @@ module Orchestra
           :provides => nil, :compact => false, :thread_count => nil
       end
 
-      def build_node
+      def build_step
         adapter.validate!
-        Node::DelegateNode.new adapter, build_node_args
+        Step::ObjectStep.new adapter, build_step_args
       end
 
-      def build_node_args
+      def build_step_args
         hsh = {
           :dependencies => adapter.dependencies,
           :provides     => Array(provides),
@@ -115,7 +115,7 @@ module Orchestra
       end
     end
 
-    class ExecutionContext
+    class ObjectContext
       def initialize adapter, state
         @__adapter__ = adapter
         @__state__ = state
@@ -125,8 +125,8 @@ module Orchestra
         end
       end
 
-      def perform *args
-        @__adapter__.perform @__state__, *args
+      def execute *args
+        @__adapter__.execute @__state__, *args
       end
     end
 

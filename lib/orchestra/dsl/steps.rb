@@ -1,8 +1,8 @@
 module Orchestra
   module DSL
-    module Nodes
+    module Steps
       class Builder
-        attr_accessor :collection, :perform_block
+        attr_accessor :collection, :execute_block
 
         attr :defaults, :dependencies, :provisions
 
@@ -12,12 +12,12 @@ module Orchestra
           @provisions = []
         end
 
-        def build_node
-          Node::InlineNode.new(
+        def build_step
+          Step::InlineStep.new(
             :collection    => collection,
             :defaults      => defaults,
             :dependencies  => dependencies,
-            :perform_block => perform_block,
+            :execute_block => execute_block,
             :provides      => provisions,
           )
         end
@@ -28,8 +28,6 @@ module Orchestra
           context = new builder
           context.instance_eval &block
         end
-
-        attr :collection, :perform
 
         def initialize builder
           @builder = builder
@@ -58,8 +56,8 @@ module Orchestra
           @builder.provisions.concat provisions
         end
 
-        def perform &block
-          @builder.perform_block = block
+        def execute &block
+          @builder.execute_block = block
         end
 
         def iterates_over dependency
