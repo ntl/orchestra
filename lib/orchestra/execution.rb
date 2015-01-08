@@ -88,9 +88,9 @@ module Orchestra
       end
 
       def execute
-        operation_execution.publish :step_entered, self, input
+        operation_execution.publish :step_entered, to_node, input
         output = step.process invoke
-        operation_execution.publish :step_exited, self, output
+        operation_execution.publish :step_exited, to_node, output
         output
       end
 
@@ -107,6 +107,10 @@ module Orchestra
 
       def build_context
         step.build_context operation_execution.state
+      end
+
+      def to_node
+        Node.new name, self
       end
     end
 
