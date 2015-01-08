@@ -88,9 +88,9 @@ module Orchestra
       end
 
       def execute
-        operation_execution.publish :step_entered, name, input
+        operation_execution.publish :step_entered, self, input
         output = step.process invoke
-        operation_execution.publish :step_exited, name, output
+        operation_execution.publish :step_exited, self, output
         output
       end
 

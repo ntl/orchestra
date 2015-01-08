@@ -466,14 +466,14 @@ end
 
 The arguments passed to `update` will vary based on the event:
 
-| Event                    | First argument                       | Second argument                   |
-| ------------------------ | ------------------------------------ | --------------------------------- |
-| `:operation_entered`     | The name of the operation starting   | Input going into the operation    |
-| `:operation_exited`      | The name of the operation finishing  | Output of the operation           |
-| `:step_entered`          | The name of the step                 | Input going into the step         |
-| `:step_exited`           | The name of the step                 | Output of the step                |
-| `:error_raised`          | The error itself                     | `nil`                             |
-| `:service_accessed`      | The name of the service              | Recording of the service call     |
+| Event                    | First argument          | Second argument                   |
+| ------------------------ | ----------------------- | --------------------------------- |
+| `:operation_entered`     | The Operation starting  | Input going into the operation    |
+| `:operation_exited`      | The Operation finishing | Output of the operation           |
+| `:step_entered`          | The Step                | Input going into the step         |
+| `:step_exited`           | The Step                | Output of the step                |
+| `:error_raised`          | The error itself        | `nil`                             |
+| `:service_accessed`      | The name of the service | Recording of the service call     |
 
 All observers attached to the execution of the outer operation will also attach to the inner operation.
 

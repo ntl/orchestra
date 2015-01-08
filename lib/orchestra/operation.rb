@@ -32,7 +32,7 @@ module Orchestra
       run_list = RunList.build steps, result, input.keys
       execution = Execution.start_operation conductor, run_list, input
       yield execution if block_given?
-      execution.publish :operation_entered, name, input
+      execution.publish :operation_entered, self, input
       execution
     end
 
@@ -40,7 +40,7 @@ module Orchestra
       execution = start_execution *args, &block
       execution.execute
       output = execution.extract_result result
-      execution.publish :operation_exited, name, output
+      execution.publish :operation_exited, self, output
       @command ? nil : output
     end
 
