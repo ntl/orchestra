@@ -31,8 +31,7 @@ class ObjectAdapterTest < Minitest::Test
       step Splitter, :provides => :words
       step Upcaser, :iterates_over => :words, :provides => :upcased_words, :method => :call
       step Bolder, :iterates_over => :upcased_words, :provides => :bolded_words, :method => :call
-      step Joiner, :method => :join
-      self.result = :joiner
+      result Joiner, :method => :join
     end
 
     result = Orchestra.execute(

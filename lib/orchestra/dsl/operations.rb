@@ -91,8 +91,9 @@ module Orchestra
           nil
         end
 
-        def result name = nil, &block
-          step = @builder.add_step name, &block
+        def result *args, &block
+          args << nil if args.empty?
+          step = @builder.add_step *args, &block
           name ||= step.provisions.fetch 0
           self.result = name
         end
