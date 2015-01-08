@@ -49,7 +49,7 @@ module Orchestra
     end
 
     def to_node
-      Node.new name, self
+      Node.new self, name
     end
 
     private

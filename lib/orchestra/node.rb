@@ -5,10 +5,10 @@ module Orchestra
 
     extend Forwardable
 
-    def_delegators :@default_run_list, :provisions, :dependencies,
-      :optional_dependencies, :required_dependencies
+    def_delegators :@node, :provisions, :dependencies, :optional_dependencies,
+      :required_dependencies
 
-    def initialize name, step_or_operation
+    def initialize step_or_operation, name
       @name = name
       @node = step_or_operation
       freeze
@@ -22,6 +22,13 @@ module Orchestra
         provisions: provisions,
         required_dependencies: required_dependencies,
       }
+    end
+
+    def inspect
+      params = to_h.each_with_object [] do |(key, val), list|
+        list << "#{key}=#{val.inspect}"
+      end
+      "#<Orchestra::Node #{params.join ', '}>"
     end
 
     def operation?
