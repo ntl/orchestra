@@ -27,12 +27,7 @@ class ObjectAdapterTest < Minitest::Test
   end
 
   def test_executing_an_operation_with_integrated_objects
-    operation = Orchestra::Operation.new do
-      step Splitter, :provides => :words
-      step Upcaser, :iterates_over => :words, :provides => :upcased_words, :method => :call
-      step Bolder, :iterates_over => :upcased_words, :provides => :bolded_words, :method => :call
-      result Joiner, :method => :join
-    end
+    operation = integrated_objects_operation
 
     result = Orchestra.execute(
       operation,
@@ -59,10 +54,36 @@ class ObjectAdapterTest < Minitest::Test
     )
   end
 
+  def test_name_includes_method_when_not_using_execute
+    assert_equal(
+      %i(
+        object_adapter_test/splitter
+        object_adapter_test/upcaser#call
+        object_adapter_test/bolder#call
+        object_adapter_test/joiner#join
+      ),
+      integrated_objects_operation.steps.keys,
+    )
+  end
+
+  private
+
+  def integrated_objects_operation
+    Orchestra::Operation.new do
+      step Splitter, :provides => :words
+      step Upcaser, :iterates_over => :words, :provides => :upcased_words, :method => :call
+      step Bolder, :iterates_over => :upcased_words, :provides => :bolded_words, :method => :call
+      result Joiner, :method => :join
+    end
+  end
+
   module Splitter
-    def self.execute sentence
+    extend self
+
+    def execute sentence
       sentence.split %r{[[:space:]]+}
     end
+    alias_method :call, :execute
   end
 
   class Upcaser

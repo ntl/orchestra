@@ -57,15 +57,15 @@ module Orchestra
         end
 
         def build_object_step object, args
-          name = object_name object
           step = ObjectAdapter.build_step object, args
+          name = object_name step.adapter
           [name, step]
         end
 
         private
 
         def object_name object
-          object.name and Util.to_snake_case Util.demodulize object.name
+          object.name and Util.to_snake_case object.name
         end
       end
 

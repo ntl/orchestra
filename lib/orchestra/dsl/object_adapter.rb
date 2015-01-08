@@ -42,6 +42,14 @@ module Orchestra
       def dependencies
         [collection, *object_method.dependencies].compact
       end
+
+      def name
+        if method_name == :execute
+          object.name
+        else
+          "#{object.name}##{method_name}"
+        end
+      end
     end
 
     class SingletonAdapter < ObjectAdapter
