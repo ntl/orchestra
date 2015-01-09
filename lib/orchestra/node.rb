@@ -1,22 +1,24 @@
 module Orchestra
   # Reader object to expose operations and steps to the outside world
   class Node
-    attr :name
+    attr :input, :name
 
     extend Forwardable
 
     def_delegators :@node, :provisions, :dependencies, :optional_dependencies,
       :required_dependencies
 
-    def initialize step_or_operation, name
+    def initialize step_or_operation, name, input
       @name = name
       @node = step_or_operation
+      @input = format_input input
       freeze
     end
 
     def to_h
       {
         dependencies: dependencies,
+        input: input,
         name: name,
         optional_dependencies: optional_dependencies,
         provisions: provisions,
@@ -37,6 +39,14 @@ module Orchestra
 
     def step?
       not operation?
+    end
+
+    private
+
+    def format_input input
+      @node.dependencies.each_with_object Hash.new do |dep, hsh|
+        hsh[dep] = input[dep] if input.has_key? dep
+      end
     end
   end
 end

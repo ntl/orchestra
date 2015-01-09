@@ -6,9 +6,12 @@ module Orchestra
       builder.build
     end
 
+    attr :result
+
     include Enumerable
 
-    def initialize steps
+    def initialize steps, result
+      @result = result
       @steps = steps
       @steps.freeze
       freeze
@@ -84,7 +87,7 @@ module Orchestra
       def build
         sort!
         prune!
-        RunList.new @steps_hash
+        RunList.new @steps_hash, @result
       end
 
       def sort!

@@ -2,13 +2,16 @@ module Orchestra
   module Execution
     extend self
 
-    def start_operation *args
-      Operation.new *args
+    def build operation, conductor, input = {}
+      run_list = RunList.build operation.steps, operation.result, input.keys
+      node = Node.new run_list, operation.name, input
+      Operation.new conductor, run_list, input, node
     end
 
     def execute_step step, input
-      operation_execution = Operation.new Conductor.new, {}, input
-      Step.execute step, 'anonymous', operation_execution
+      node = Node.new step, 'anonymous', input
+      operation_execution = Operation.new Conductor.new, {}, input, node
+      Step.execute step, node.name, operation_execution
     end
 
     class Operation
@@ -18,22 +21,30 @@ module Orchestra
       def_delegators :@run_list, :provisions, :dependencies,
         :optional_dependencies, :required_dependencies
 
-      attr :conductor, :input, :state, :registry, :run_list
+      attr :conductor, :input, :node, :registry, :run_list, :state
 
-      def initialize conductor, run_list, input
+      def initialize conductor, run_list, input, node
         @conductor = conductor
         @input = input.dup
+        @node = node
         @run_list = run_list
         @registry = conductor.build_registry self
         @state = registry.merge input
       end
 
       def execute
+        publish :operation_entered, node, node.input if node
         ensure_inputs_are_present!
         run_list.each do |name, step| process name, step end
+        publish :operation_exited, node, output if node
+        output
       rescue => error
         publish :error_raised, error
         raise error
+      end
+
+      def output
+        state.fetch run_list.result
       end
 
       def process name, step
@@ -45,10 +56,6 @@ module Orchestra
         has_dep = state.method :[]
         missing_input = required_dependencies.reject &has_dep
         raise MissingInputError.new missing_input unless missing_input.empty?
-      end
-
-      def extract_result result
-        state.fetch result
       end
 
       def publish event, *payload
@@ -78,7 +85,7 @@ module Orchestra
         instance
       end
 
-      attr :context, :name, :operation_execution, :step
+      attr :context, :name, :node, :operation_execution, :step
 
       def initialize step, name, operation_execution
         @name = name
@@ -88,9 +95,10 @@ module Orchestra
       end
 
       def execute
-        operation_execution.publish :step_entered, to_node, input
+        @node = Node.new step, name, input
+        operation_execution.publish :step_entered, node, node.input
         output = step.process invoke
-        operation_execution.publish :step_exited, to_node, output
+        operation_execution.publish :step_exited, node, output
         output
       end
 

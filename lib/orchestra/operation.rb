@@ -27,29 +27,21 @@ module Orchestra
       output.select do |key, _| key = result end
     end
 
-    def start_execution *args
-      conductor, input = extract_args args
-      run_list = RunList.build steps, result, input.keys
-      execution = Execution.start_operation conductor, run_list, input
-      yield execution if block_given?
-      execution.publish :operation_entered, to_node, input
-      execution
-    end
-
     def execute *args, &block
       execution = start_execution *args, &block
-      execution.execute
-      output = execution.extract_result result
-      execution.publish :operation_exited, to_node, output
+      output = execution.execute
       @command ? nil : output
+    end
+
+    def start_execution *args
+      conductor, input = extract_args args
+      execution = Execution.build self, conductor, input
+      yield execution if block_given?
+      execution
     end
 
     def command?
       @command ? true : false
-    end
-
-    def to_node
-      Node.new self, name
     end
 
     private
