@@ -1,3 +1,5 @@
+require "yaml"
+
 class ReplayableOperationTest < Minitest::Test
   include Examples::InvitationService::TestSetup
 
@@ -6,16 +8,20 @@ class ReplayableOperationTest < Minitest::Test
     recording = execute_for_real
 
     # Write the recording out to a file. In this case, a StringIO is used for
-    # simplicity, and we serialize into JSON
+    # simplicity, and we serialize into JSON. The to_h is important as
+    # hashes can be coerced back into Recording objects.
     file = StringIO.new
     file.write JSON.dump recording
     file.rewind
 
+    # Re-load the recording from JSON using Orchestra::Recording()
+    parsed_json = JSON.parse file.read, symbolize_names: true
+    recording = Orchestra::Recording(parsed_json)
+
     # Replay the operation, directing SMTP to an alternative service object
     smtp_service = build_example_smtp
-    Orchestra.replay_recording(
+    recording.replay(
       Examples::InvitationService,
-      JSON.load(file.read),
       :smtp => smtp_service,
     )
 

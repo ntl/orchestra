@@ -46,7 +46,7 @@ class RecordingTelemetryTest < Minitest::Test
             ],
           },
         },
-        :print => {
+        :__finally__ => {
           :input => {
             :fizzbuzz => [
               "1",
@@ -66,15 +66,15 @@ class RecordingTelemetryTest < Minitest::Test
               "FizzBuzz",
             ],
           },
-          :output => { :print => [] },
+          :output => { :__finally__ => [] },
         }
       },
       :output => [],
     }
   end
 
-  def execute_with_telemetry telemetry, io
-    conductor = Orchestra::Conductor.new :io => io
+  def execute_with_telemetry telemetry, stdout
+    conductor = Orchestra::Conductor.new :stdout => stdout
 
     conductor.add_observer TelemetryRecorder.new telemetry
 

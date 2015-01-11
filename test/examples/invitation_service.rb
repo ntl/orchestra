@@ -8,7 +8,7 @@ module Examples
       provides :followers
       execute do
         json = http.get "flutter.io", "/users/#{account_name}/followers"
-          JSON.parse json
+        JSON.parse json
       end
     end
 

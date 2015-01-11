@@ -17,7 +17,7 @@ module Orchestra
     end
 
     def record *args
-      recording = Recording.new
+      recording = Recording.fresh
       add_observer recording
       execute *args do |execution|
         execution.add_observer recording

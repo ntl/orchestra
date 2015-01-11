@@ -21,12 +21,28 @@ module Examples
       end
     end
 
-    finally :print do
-      depends_on :io
+    finally do
+      depends_on :stdout
       iterates_over :fizzbuzz
       execute do |str|
-        io.puts str
+        stdout.puts str
       end
     end
+  end
+
+  InteractiveFizzBuzz = Orchestra::Operation.new do
+    step :prompt_user do
+      depends_on :stdin, :stdout
+      provides :up_to
+      execute do
+        stdout.puts "How high would you like to go?"
+        stdout.print " => "
+        stdout.flush
+        value = stdin.gets
+        value.to_i
+      end
+    end
+
+    finally Examples::FizzBuzz
   end
 end

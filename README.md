@@ -491,13 +491,13 @@ recording.output # <-- the usual output is attached to the recording itself
 And a recording can be replayed:
 
 ```ruby
-Orchestra.replay_recording InvitationService, recording
+recording.replay InvitationService
 ```
 
 You can override the inputs passed in when replaying:
 
 ```ruby
-Orchestra.replay_recording InvitationService, recording, :account_name => "dhh"
+recording.replay InvitationService, :account_name => "dhh"
 ```
 
 If you want to serialize/persist the recording, just use `JSON.dump`:
@@ -511,8 +511,8 @@ You can replay the recording using `JSON.load`:
 
 ```ruby
 json = File.read "tmp/recording.json"
-recording = JSON.load json
-Orchestra.replay_recording InvitationService, recording
+recording = Orchestra::Recording(JSON.load json, symbolize_names: true)
+recording.replay InvitationService
 ```
 
 ## Installation

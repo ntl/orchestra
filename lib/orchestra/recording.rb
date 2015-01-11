@@ -1,9 +1,15 @@
 module Orchestra
   class Recording
-    attr :input, :output, :services
+    def self.fresh
+      services = Hash.new do |hsh, service_name| hsh[service_name] = [] end
+      new services
+    end
 
-    def initialize
-      @services = Hash.new do |hsh, service_name| hsh[service_name] = [] end
+    attr_accessor :input, :output
+    attr :services
+
+    def initialize services
+      @services = services
     end
 
     def update event_name, *args
@@ -19,10 +25,14 @@ module Orchestra
       end
     end
 
+    def [] attr
+      to_h[attr]
+    end
+
     def to_h
       {
-        :input => input,
-        :output => output,
+        :input              => input,
+        :output             => output,
         :service_recordings => services,
       }
     end
@@ -31,13 +41,20 @@ module Orchestra
       generator.generate to_h
     end
 
-    def self.replay operation, input, service_recordings
+    def replay operation, override_input = {}
       replayed_services = {}
-      service_recordings.each do |svc, service_recording|
+      services.each do |svc, service_recording|
         replayed_services[svc] = Playback.build service_recording
       end
       conductor = Conductor.new replayed_services
-      conductor.execute operation, input
+      conductor.execute operation, input.merge(override_input)
     end
+  end
+
+  def Recording serialized_recording
+    recording = Recording.new serialized_recording[:service_recordings]
+    recording.input = serialized_recording[:input]
+    recording.output = serialized_recording[:output]
+    recording.freeze
   end
 end

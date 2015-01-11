@@ -3,7 +3,7 @@ class NodeTest < Minitest::Test
     node = Orchestra::Node.new Examples::FizzBuzz, "Examples::FizzBuzz", {}
 
     assert_equal(
-      "#<Orchestra::Node dependencies=[:array, :fizzbuzz, :io, :up_to], input={}, name=\"Examples::FizzBuzz\", optional_dependencies=[], provisions=[:array, :fizzbuzz, :print], required_dependencies=[:io, :up_to]>",
+      "#<Orchestra::Node dependencies=[:array, :fizzbuzz, :stdout, :up_to], input={}, name=\"Examples::FizzBuzz\", optional_dependencies=[], provisions=[:__finally__, :array, :fizzbuzz], required_dependencies=[:stdout, :up_to]>",
       node.inspect,
     )
   end
