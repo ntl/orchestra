@@ -4,12 +4,12 @@ module Orchestra
 
     def build operation, conductor, input = {}
       run_list = RunList.build operation.steps, operation.result, input.keys
-      node = Node.new run_list, operation.name, input
+      node = Recording::Node.new run_list, operation.name, input
       Operation.new conductor, run_list, input, node
     end
 
     def execute_step step, input
-      node = Node.new step, 'anonymous', input
+      node = Recording::Node.new step, 'anonymous', input
       operation_execution = Operation.new Conductor.new, {}, input, node
       Step.execute step, node.name, operation_execution
     end
@@ -95,7 +95,7 @@ module Orchestra
       end
 
       def execute
-        @node = Node.new step, name, input
+        @node = Recording::Node.new step, name, input
         operation_execution.publish :step_entered, node, node.input
         output = step.process invoke
         operation_execution.publish :step_exited, node, output
