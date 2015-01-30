@@ -119,4 +119,14 @@ class DSLTest < Minitest::Test
 
     assert_equal "Must supply at least one step", error.message
   end
+
+  def test_cannot_accidentally_try_to_define_a_conductor_with_dsl
+    error = assert_raises ArgumentError do
+      Orchestra::Conductor.new do
+        self.result = :foo
+      end
+    end
+
+    assert_equal "Supplied block to Conductor.new; did you mean to invoke Orchestra::Operation.new do … end?", error.message
+  end
 end

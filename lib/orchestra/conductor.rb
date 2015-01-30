@@ -7,6 +7,9 @@ module Orchestra
       @thread_pool = ThreadPool.new
       @observers = Set.new
       self.thread_count = Configuration.thread_count
+      if block_given?
+        raise ArgumentError, "Supplied block to Conductor.new; did you mean to invoke Orchestra::Operation.new do … end?"
+      end
     end
 
     def execute operation, input = {}
