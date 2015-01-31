@@ -61,7 +61,7 @@ module Orchestra
       def initialize result, input_names = []
         @input_names = input_names
         @steps_hash = {}
-        @required = [result]
+        @required = Set.new [result]
         @result = result
         freeze
       end
@@ -109,8 +109,10 @@ module Orchestra
 
       def require step
         supplied_by_input = input_names.method :include?
-        deps = step.required_dependencies.reject &supplied_by_input
-        @required.concat deps
+        required_deps = step.required_dependencies.reject &supplied_by_input
+        @required.merge required_deps
+        required = @required.method :include?
+        @required.merge step.optional_dependencies.reject &required
         true
       end
 

@@ -16,6 +16,29 @@ class RunListTest < Minitest::Test
     assert_equal %w(foo⇒bar bar⇒baz baz⇒qux qux⇒res), run_list.step_names
   end
 
+  def test_does_not_discard_steps_that_would_override_defaults
+    steps = {
+      'foo' => OpenStruct.new(
+        :optional_dependencies => [],
+        :required_dependencies => [:bar],
+        :provisions => [:baz],
+      ),
+      'qux' => OpenStruct.new(
+        :optional_dependencies => [:baz],
+        :required_dependencies => [],
+        :provisions => [:res],
+      ),
+    }
+    builder = assemble_builder steps
+    builder.input_names.concat [:bar]
+
+    builder.sort!
+    builder.prune!
+    run_list = builder.build
+
+    assert_equal %w(foo qux), run_list.step_names
+  end
+
   def test_supplying_dependencies
     builder.input_names << :baz
 
