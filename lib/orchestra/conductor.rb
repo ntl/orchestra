@@ -94,10 +94,10 @@ module Orchestra
         alias_method :__getobj__, :service
         alias_method :__setobj__, :service=
 
-          def initialize service, recording
-            super service
-            @recording = recording
-          end
+        def initialize service, recording
+          super service
+          @recording = recording
+        end
 
         def kind_of? klass
           super or service.kind_of? klass

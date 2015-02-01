@@ -33,12 +33,10 @@ class DSLTest < Minitest::Test
     end
     assert_equal :foo, operation.result
 
-    error = assert_raises ArgumentError do
-      operation = Orchestra::Operation.new do
-        result do execute do 'foo' end end
-      end
+    operation = Orchestra::Operation.new do
+      result do execute do 'foo' end end
     end
-    assert_equal "Could not infer name for step from a provision", error.message
+    assert_equal :result, operation.result
 
     operation = Orchestra::Operation.new do
       result do

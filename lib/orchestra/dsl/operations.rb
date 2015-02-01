@@ -20,7 +20,6 @@ module Orchestra
 
         def add_step name_or_object, args = {}, &block
           name, step = case name_or_object
-          when nil then build_anonymous_step block
           when Operation then build_embedded_operation_step name_or_object
           when ::String, ::Symbol then build_inline_step name_or_object, block
           else build_object_step name_or_object, args
@@ -35,15 +34,6 @@ module Orchestra
           end
           @steps[name] = step
           step.freeze
-        end
-
-        def build_anonymous_step block
-          step = Step::InlineStep.build &block
-          unless step.provisions.size == 1
-            raise ArgumentError, "Could not infer name for step from a provision"
-          end
-          name = step.provisions.fetch 0
-          [name, step]
         end
 
         def build_embedded_operation_step operation
@@ -92,7 +82,7 @@ module Orchestra
         end
 
         def result *args, &block
-          args << nil if args.empty?
+          args << :result if args.empty?
           step = @builder.add_step *args, &block
           name ||= step.provisions.fetch 0
           self.result = name
