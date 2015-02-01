@@ -19,6 +19,24 @@ module OperationTest
       assert_equal %(Missing input :sentence), error.message
     end
 
+    def test_adds_name_to_missing_provision_error
+      operation = Orchestra::Operation.new do
+        result :foo do
+          provides :bar, :baz
+          execute do nil end
+        end
+      end
+
+      error = assert_raises Orchestra::MissingProvisionError do
+        operation.execute
+      end
+
+      assert_equal(
+        "Node `:foo' failed to supply output: :bar and :baz",
+        error.message,
+      )
+    end
+
     def test_mutating_inputs
       operation = build_mutator
 

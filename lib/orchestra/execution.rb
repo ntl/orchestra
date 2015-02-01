@@ -50,6 +50,9 @@ module Orchestra
       def process name, step
         output = Step.execute step, name, self
         state.merge! output
+      rescue MissingProvisionError => error
+        error.name = name.inspect
+        raise error
       end
 
       def ensure_inputs_are_present!

@@ -13,12 +13,18 @@ module Orchestra
   end
 
   class MissingProvisionError < Error
+    attr_writer :name
+
     def initialize missing_provisions
       @missing_provisions = missing_provisions
     end
 
+    def name
+      @name ||= "<anonymous>"
+    end
+
     def to_s
-      "failed to supply output: #{list_out @missing_provisions}"
+      "Node `#{name}' failed to supply output: #{list_out @missing_provisions}"
     end
   end
 

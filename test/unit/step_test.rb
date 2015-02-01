@@ -78,7 +78,7 @@ class StepTest < Minitest::Test
     error = assert_raises Orchestra::MissingProvisionError do step.execute end
 
     assert_equal(
-      "failed to supply output: :foo, :bar and :baz",
+      "Node `<anonymous>' failed to supply output: :foo, :bar and :baz",
       error.message,
     )
   end
@@ -92,7 +92,7 @@ class StepTest < Minitest::Test
     error = assert_raises Orchestra::MissingProvisionError do step.execute end
 
     assert_equal(
-      "failed to supply output: :foo",
+      "Node `<anonymous>' failed to supply output: :foo",
       error.message,
     )
   end
