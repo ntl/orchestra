@@ -79,6 +79,34 @@ class RunListTest < Minitest::Test
     )
   end
 
+  def test_evaluates_runlist_for_embedded_operations_before_outer_operation
+    inner_operation = Orchestra::Operation.new do
+      step :unnecessary do
+        depends_on :bar
+        provides :baz
+        execute do foo end
+      end
+
+      result :short_circut_me do
+        depends_on :baz
+        provides :qux
+        execute do foo * 2 end
+      end
+    end
+
+    outer_steps = {
+      'nooooOOOoo' => OpenStruct.new(
+        :required_dependencies => [:foo],
+        :provisions            => [:bar],
+        :optional_dependencies => [],
+      ),
+      'embedded' => inner_operation,
+    }
+
+    run_list = Orchestra::RunList.build outer_steps, :qux, [:baz]
+    assert_equal ['embedded'], run_list.step_names
+  end
+
   private
 
   def assemble_builder steps = default_steps

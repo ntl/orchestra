@@ -60,19 +60,24 @@ module Orchestra
 
       def initialize result, input_names = []
         @input_names = input_names
-        @steps_hash = {}
+        @raw = {}
         @required = Set.new [result]
         @result = result
+        @steps_hash = {}
         freeze
       end
 
       def merge! steps
         steps.each do |name, step|
           self[name] = step
+          @raw[name] = step
         end
       end
 
       def []= name, step
+        if step.is_a? Operation
+          step = RunList.build step.steps, step.result, @input_names
+        end
         @steps_hash[name] = step
       end
 
@@ -87,7 +92,13 @@ module Orchestra
       def build
         sort!
         prune!
-        RunList.new @steps_hash, @result
+        RunList.new output, @result
+      end
+
+      def output
+        @steps_hash.each_key.with_object Hash.new do |name, hsh|
+          hsh[name] = @raw.fetch name
+        end
       end
 
       def sort!
@@ -139,7 +150,7 @@ module Orchestra
 
         def build_dependency_tree
           @hsh = @steps.each_with_object Hash.new do |(name, step), hsh|
-          hsh[name] = build_dependencies_for step
+            hsh[name] = build_dependencies_for step
           end
         end
 
