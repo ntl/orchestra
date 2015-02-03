@@ -120,10 +120,10 @@ class RunListTest < Minitest::Test
 
   def default_steps
     {
-      'foo⇒bar' => OpenStruct.new(:required_dependencies => [:foo], :provisions => [:bar], optional_dependencies: []),
-      'bar⇒baz' => OpenStruct.new(:required_dependencies => [:bar], :provisions => [:baz], optional_dependencies: []),
-      'baz⇒qux' => OpenStruct.new(:required_dependencies => [:baz], :provisions => [:qux], optional_dependencies: []),
-      'qux⇒res' => OpenStruct.new(:required_dependencies => [:qux], :provisions => [:res], optional_dependencies: []),
+      'foo⇒bar' => OpenStruct.new(:required_dependencies => [:foo], :provisions => [:bar], :optional_dependencies => []),
+      'bar⇒baz' => OpenStruct.new(:required_dependencies => [:bar], :provisions => [:baz], :optional_dependencies => []),
+      'baz⇒qux' => OpenStruct.new(:required_dependencies => [:baz], :provisions => [:qux], :optional_dependencies => []),
+      'qux⇒res' => OpenStruct.new(:required_dependencies => [:qux], :provisions => [:res], :optional_dependencies => []),
     }
   end
 
