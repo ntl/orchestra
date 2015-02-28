@@ -15,7 +15,7 @@ develompent environments that rely on binstubs.
 The example operations located in `test/examples` are loaded for you. To try one
 out:
 
-    [1] pry(Orchestra)> Orchestra.execute Examples::FizzBuzz, :up_to => 16, :io => $stdout
+    [1] pry(Orchestra)> Orchestra.execute Examples::FizzBuzz, :up_to => 16, :stdout => $stdout
 
 See the README.md as well as the examples themselves for more information. You
 will need to reload the examples after raking (or invoking reload!)
