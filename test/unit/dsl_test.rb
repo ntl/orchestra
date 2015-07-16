@@ -127,4 +127,28 @@ class DSLTest < Minitest::Test
 
     assert_equal "Supplied block to Conductor.new; did you mean to invoke Orchestra::Operation.new do … end?", error.message
   end
+
+  def test_finally_for_modularized_object_steps
+    operation = Orchestra::Operation.new do
+      finally ExampleModule::AddFooToList
+    end
+
+    ary = []
+    Orchestra.execute operation, :list => ary
+    assert_equal [:foo], ary
+  end
+
+  private
+
+  module ExampleModule
+    class AddFooToList
+      def initialize list:
+        @list = list
+      end
+
+      def execute
+        @list << :foo
+      end
+    end
+  end
 end
