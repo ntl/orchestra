@@ -89,9 +89,10 @@ module Orchestra
         end
 
         def finally name = :__finally__, &block
-          @builder.add_step name, &block
+          step = @builder.add_step name, &block
           @builder.command = true
-          self.result = name
+          resolved_name = step.provisions.fetch 0
+          self.result = resolved_name
         end
       end
     end
